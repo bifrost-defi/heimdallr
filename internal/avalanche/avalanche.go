@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,7 +25,7 @@ func New(client *ethclient.Client) *Avalanche {
 	}
 }
 
-// Subscribe creates subscription for the contract and returns
+// Subscribe creates subscription for the contract and returns Subscription instance.
 func (a *Avalanche) Subscribe(ctx context.Context, contract string) (*Subscription, error) {
 	if a.sub != nil {
 		return nil, ErrSubscriptionExists
