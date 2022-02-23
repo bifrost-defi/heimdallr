@@ -142,7 +142,7 @@ func (c *Contract) Approve(ctx context.Context, addr, spenderAddr, amount string
 	am, _ := math.ParseBig256(amount)
 	amT := tezos.Z(*am)
 
-	prim, err := con.RunView(ctx, "transfer",
+	prim, err := con.RunView(ctx, "approve",
 		micheline.NewPair(
 			micheline.NewBytes(spender.Bytes22()),
 			micheline.NewNat(amT.Big()),
