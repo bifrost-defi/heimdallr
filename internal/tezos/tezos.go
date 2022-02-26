@@ -1,6 +1,10 @@
 package tezos
 
-import "blockwatch.cc/tzgo/rpc"
+import (
+	"context"
+
+	"blockwatch.cc/tzgo/rpc"
+)
 
 type Tezos struct {
 	client *rpc.Client
@@ -12,7 +16,11 @@ func New(client *rpc.Client) *Tezos {
 	}
 }
 
-func (t *Tezos) MintUSDC() error {
+func (t *Tezos) Subscribe(ctx context.Context, contract string) (*Subscription, error) {
+	return &Subscription{}, nil
+}
+
+func (t *Tezos) MintWUSDC() error {
 	panic("implement me!")
 }
 

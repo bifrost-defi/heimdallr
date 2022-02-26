@@ -32,23 +32,30 @@ func (b *Bridge) SetTezosContract(address string) {
 }
 
 func (b *Bridge) Run(ctx context.Context) error {
-	sub, err := b.avalanche.Subscribe(ctx, b.avaContract)
+	avaSub, err := b.avalanche.Subscribe(ctx)
 	if err != nil {
 		return fmt.Errorf("subscribe avalanche: %w", err)
 	}
 
-	b.loop(ctx, sub)
+	tzsSub, err := b.tezos.Subscribe(ctx, b.tzsContract)
+	if err != nil {
+		return fmt.Errorf("subscribe tezos: %w", err)
+	}
+
+	b.loop(ctx, avaSub, tzsSub)
 
 	return nil
 }
 
-func (b *Bridge) loop(ctx context.Context, sub *avalanche.Subscription) {
+func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSub *tezos.Subscription) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-sub.OnAVAXLocked():
-		case <-sub.OnUSDCLocked():
+		case <-avaSub.OnAVAXLocked():
+		case <-avaSub.OnUSDCLocked():
+		case <-tzsSub.OnWAVAXBurned():
+		case <-tzsSub.OnWUSDCBurned():
 		}
 	}
 }
