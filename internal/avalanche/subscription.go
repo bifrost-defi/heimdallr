@@ -24,6 +24,18 @@ type LockEvent struct {
 	destination common.Address
 }
 
+func (e LockEvent) User() string {
+	return e.user.Hex()
+}
+
+func (e LockEvent) Amount() *big.Int {
+	return e.amount
+}
+
+func (e LockEvent) Destination() string {
+	return e.destination.Hex()
+}
+
 var (
 	avaxLockedSig = []byte("AVAXLocked(address,uint256,string)")
 	usdcLockedSig = []byte("USDCLocked(address,uint256,string)")

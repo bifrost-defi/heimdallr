@@ -3,6 +3,7 @@ package tezos
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/tezos"
@@ -43,10 +44,10 @@ func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
 	return &Subscription{}, nil
 }
 
-func (t *Tezos) MintWUSDC() error {
+func (t *Tezos) MintWUSDC(user string, amount *big.Int) (string, *big.Int, error) {
 	panic("implement me!")
 }
 
-func (t *Tezos) MintWAVAX() error {
+func (t *Tezos) MintWAVAX(user string, amount *big.Int) (string, *big.Int, error) {
 	panic("implement me!")
 }

@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"os"
+	"os/signal"
 
 	"blockwatch.cc/tzgo/rpc"
 	"bridge-oracle/config"
@@ -12,31 +13,45 @@ import (
 	"bridge-oracle/internal/tezos"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func main() {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found: %s", err.Error())
+		sugar.Fatalf("No .env file found: %s", err.Error())
 	}
 	c, err := config.LoadConfig()
 	if err != nil {
 		err = fmt.Errorf("load config: %w", err)
-		log.Fatalln(err)
+		sugar.Fatal(err)
 	}
 
-	ctx := context.Background()
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		<-exit
+		cancel()
+
+		sugar.Debug("shutdown")
+	}()
 
 	avaClient, err := ethclient.Dial(c.Avalanche.URL)
 	if err != nil {
 		err = fmt.Errorf("avalanche dial: %w", err)
-		log.Fatalln(err)
+		sugar.Fatal(err)
 	}
 	ava := avalanche.New(avaClient, c.Avalanche.Contract, c.Avalanche.PrivateKey)
 
 	tzsClient, err := rpc.NewClient(c.Tezos.URL, nil)
 	if err != nil {
 		err = fmt.Errorf("tezos dial: %w", err)
-		log.Fatalln(err)
+		sugar.Fatal(err)
 	}
 	tzs := tezos.New(tzsClient)
 
@@ -45,13 +60,13 @@ func main() {
 		c.Tezos.WUSDCContract,
 	); err != nil {
 		err = fmt.Errorf("set tezos contract: %w", err)
-		log.Fatalln(err)
+		sugar.Fatal(err)
 	}
 
-	b := bridge.New(ava, tzs)
+	b := bridge.New(ava, tzs, sugar)
 
 	if err := b.Run(ctx); err != nil {
 		err = fmt.Errorf("run bridge: %w", err)
-		log.Fatalln(err)
+		sugar.Fatal(err)
 	}
 }
