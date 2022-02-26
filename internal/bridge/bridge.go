@@ -9,9 +9,6 @@ import (
 )
 
 type Bridge struct {
-	avaContract string
-	tzsContract string
-
 	avalanche *avalanche.Avalanche
 	tezos     *tezos.Tezos
 }
@@ -23,21 +20,13 @@ func New(avalanche *avalanche.Avalanche, tezos *tezos.Tezos) *Bridge {
 	}
 }
 
-func (b *Bridge) SetAvalancheContract(address string) {
-	b.avaContract = address
-}
-
-func (b *Bridge) SetTezosContract(address string) {
-	b.tzsContract = address
-}
-
 func (b *Bridge) Run(ctx context.Context) error {
 	avaSub, err := b.avalanche.Subscribe(ctx)
 	if err != nil {
 		return fmt.Errorf("subscribe avalanche: %w", err)
 	}
 
-	tzsSub, err := b.tezos.Subscribe(ctx, b.tzsContract)
+	tzsSub, err := b.tezos.Subscribe(ctx)
 	if err != nil {
 		return fmt.Errorf("subscribe tezos: %w", err)
 	}

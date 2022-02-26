@@ -2,11 +2,18 @@ package tezos
 
 import (
 	"context"
+	"fmt"
 
 	"blockwatch.cc/tzgo/rpc"
+	"blockwatch.cc/tzgo/tezos"
 )
 
 type Tezos struct {
+	// WAVAX Token contract address
+	wavaxContract tezos.Address
+	// WUSDC Token contract address
+	wusdcContract tezos.Address
+
 	client *rpc.Client
 }
 
@@ -16,7 +23,23 @@ func New(client *rpc.Client) *Tezos {
 	}
 }
 
-func (t *Tezos) Subscribe(ctx context.Context, contract string) (*Subscription, error) {
+func (t *Tezos) SetContracts(wavaxContractAddr string, wusdcContractAddr string) error {
+	wavax, err := tezos.ParseAddress(wavaxContractAddr)
+	if err != nil {
+		return fmt.Errorf("parse wavax address: %w", err)
+	}
+	t.wavaxContract = wavax
+
+	wusdc, err := tezos.ParseAddress(wusdcContractAddr)
+	if err != nil {
+		return fmt.Errorf("parse wusdc address: %w", err)
+	}
+	t.wusdcContract = wusdc
+
+	return nil
+}
+
+func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
 	return &Subscription{}, nil
 }
 

@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	blockwatch.cc/tzgo v0.11.2-0.20220216135416-56ba4d609f0d
+	github.com/caarlos0/env/v6 v6.9.1
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/joho/godotenv v1.4.0
 )
