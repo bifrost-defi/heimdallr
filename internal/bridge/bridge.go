@@ -74,7 +74,7 @@ func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSu
 }
 
 func (b *Bridge) mintWAVAX(ctx context.Context, event Event) {
-	hash, fee, err := b.tezos.MintWAVAX(event.Destination(), event.Amount())
+	hash, fee, err := b.tezos.MintWAVAX(ctx, event.Destination(), event.Amount())
 	if err != nil {
 		b.logger.Errorf("mint wavax: %s", err)
 
@@ -91,7 +91,7 @@ func (b *Bridge) mintWAVAX(ctx context.Context, event Event) {
 }
 
 func (b *Bridge) mintWUSDC(ctx context.Context, event Event) {
-	hash, fee, err := b.tezos.MintWUSDC(event.Destination(), event.Amount())
+	hash, fee, err := b.tezos.MintWUSDC(ctx, event.Destination(), event.Amount())
 	if err != nil {
 		b.logger.Errorf("mint wusdc: %s", err)
 

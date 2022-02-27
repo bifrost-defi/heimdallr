@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bridge-oracle/internal/server"
 	"context"
 	"fmt"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"bridge-oracle/config"
 	"bridge-oracle/internal/avalanche"
 	"bridge-oracle/internal/bridge"
+	"bridge-oracle/internal/server"
 	"bridge-oracle/internal/tezos"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
@@ -58,7 +58,8 @@ func main() {
 	}
 	tzs := tezos.New(tzsClient)
 
-	if err := tzs.SetContracts(
+	if err := tzs.LoadContracts(
+		ctx,
 		c.Tezos.WAVAXContract,
 		c.Tezos.WUSDCContract,
 	); err != nil {
