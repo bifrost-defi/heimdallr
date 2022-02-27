@@ -16,12 +16,15 @@ type Tezos struct {
 	// WUSDC Token contract address
 	wusdcContract *contract.Contract
 
+	privateKey string
+
 	client *rpc.Client
 }
 
-func New(client *rpc.Client) *Tezos {
+func New(client *rpc.Client, privateKey string) *Tezos {
 	return &Tezos{
-		client: client,
+		privateKey: privateKey,
+		client:     client,
 	}
 }
 
@@ -46,11 +49,67 @@ func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
 }
 
 func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
-	panic("implement me!")
+	userAddr, err := tezos.ParseAddress(user)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse user address")
+	}
+
+	var pk tezos.PrivateKey
+	if tezos.IsEncryptedKey(t.privateKey) {
+		pk, err = tezos.ParsePrivateKey(t.privateKey)
+	} else {
+		pk, err = tezos.ParsePrivateKey(t.privateKey)
+	}
+	if err != nil {
+		return "", nil, fmt.Errorf("parse private key: %w", err)
+	}
+
+	wusdc := TokenMint{
+		User:   userAddr,
+		Amount: tezos.Z(*amount),
+	}
+	opts := &contract.CallOptions{
+		Signer: newSigner(pk),
+	}
+
+	tx, err := t.wusdcContract.Call(ctx, &TokenMintArgs{Mint: wusdc}, opts)
+	if err != nil {
+		return "", nil, fmt.Errorf("call contract: %w", err)
+	}
+
+	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
 }
 
 func (t *Tezos) MintWAVAX(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
-	panic("implement me!")
+	userAddr, err := tezos.ParseAddress(user)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse user address")
+	}
+
+	var pk tezos.PrivateKey
+	if tezos.IsEncryptedKey(t.privateKey) {
+		pk, err = tezos.ParsePrivateKey(t.privateKey)
+	} else {
+		pk, err = tezos.ParsePrivateKey(t.privateKey)
+	}
+	if err != nil {
+		return "", nil, fmt.Errorf("parse private key: %w", err)
+	}
+
+	wavax := TokenMint{
+		User:   userAddr,
+		Amount: tezos.Z(*amount),
+	}
+	opts := &contract.CallOptions{
+		Signer: newSigner(pk),
+	}
+
+	tx, err := t.wavaxContract.Call(ctx, &TokenMintArgs{Mint: wavax}, opts)
+	if err != nil {
+		return "", nil, fmt.Errorf("call contract: %w", err)
+	}
+
+	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
 }
 
 func (t *Tezos) loadContract(ctx context.Context, addr string, resolve bool) (*contract.Contract, error) {

@@ -56,7 +56,7 @@ func main() {
 		err = fmt.Errorf("tezos dial: %w", err)
 		sugar.Fatal(err)
 	}
-	tzs := tezos.New(tzsClient)
+	tzs := tezos.New(tzsClient, c.Tezos.PrivateKey)
 
 	if err := tzs.LoadContracts(
 		ctx,
