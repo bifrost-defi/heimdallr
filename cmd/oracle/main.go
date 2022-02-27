@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bridge-oracle/internal/server"
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 
@@ -12,6 +14,7 @@ import (
 	"bridge-oracle/internal/bridge"
 	"bridge-oracle/internal/tezos"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -63,10 +66,24 @@ func main() {
 		sugar.Fatal(err)
 	}
 
-	b := bridge.New(ava, tzs, sugar)
+	go runServer(ctx, sugar)
 
+	b := bridge.New(ava, tzs, sugar)
 	if err := b.Run(ctx); err != nil {
 		err = fmt.Errorf("run bridge: %w", err)
 		sugar.Fatal(err)
+	}
+}
+
+func runServer(ctx context.Context, logger *zap.SugaredLogger) {
+	router := chi.NewRouter()
+	router.HandleFunc("/live", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	srv := server.New(router, 8080)
+	if err := srv.Run(ctx); err != nil {
+		err = fmt.Errorf("run server: %w", err)
+		logger.Fatal(err)
 	}
 }
