@@ -10,17 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type Event interface {
-	User() string
-	Amount() *big.Int
-	Destination() string
-}
-
 type Bridge struct {
 	avalanche *avalanche.Avalanche
 	tezos     *tezos.Tezos
 
 	logger *zap.SugaredLogger
+}
+
+type Event interface {
+	User() string
+	Amount() *big.Int
+	Destination() string
 }
 
 func New(avalanche *avalanche.Avalanche, tezos *tezos.Tezos, logger *zap.SugaredLogger) *Bridge {
@@ -56,13 +56,13 @@ func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSu
 
 		// Handle events from chains and call another chain
 		case event := <-avaSub.OnAVAXLocked():
-			b.mintWAVAX(ctx, event)
+			go b.mintWAVAX(ctx, event)
 		case event := <-avaSub.OnUSDCLocked():
-			b.mintWUSDC(ctx, event)
+			go b.mintWUSDC(ctx, event)
 		case event := <-tzsSub.OnWAVAXBurned():
-			b.unlockAVAX(ctx, event)
+			go b.unlockAVAX(ctx, event)
 		case event := <-tzsSub.OnWUSDCBurned():
-			b.unlockUSDC(ctx, event)
+			go b.unlockUSDC(ctx, event)
 
 		// Handle errors occurred during chains subscriptions
 		case err := <-avaSub.Err():
