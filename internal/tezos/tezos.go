@@ -59,7 +59,7 @@ func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
 func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
 	userAddr, err := tezos.ParseAddress(user)
 	if err != nil {
-		return "", nil, fmt.Errorf("parse user address")
+		return "", nil, fmt.Errorf("parse user address: %w", err)
 	}
 
 	pk, err := tezos.ParsePrivateKey(t.privateKey)
@@ -86,7 +86,7 @@ func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (st
 func (t *Tezos) MintWAVAX(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
 	userAddr, err := tezos.ParseAddress(user)
 	if err != nil {
-		return "", nil, fmt.Errorf("parse user address")
+		return "", nil, fmt.Errorf("parse user address: %w", err)
 	}
 
 	pk, err := tezos.ParsePrivateKey(t.privateKey)
