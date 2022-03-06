@@ -6,14 +6,15 @@ import (
 	"math/big"
 
 	"blockwatch.cc/tzgo/contract"
+	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/tezos"
 )
 
 type Tezos struct {
-	// WAVAX Token contract address
+	// WAVAX Token contract.
 	wavaxContract *contract.Contract
-	// WUSDC Token contract address
+	// WUSDC Token contract.
 	wusdcContract *contract.Contract
 
 	privateKey string
@@ -44,8 +45,15 @@ func (t *Tezos) LoadContracts(ctx context.Context, wavaxContractAddr string, wus
 	return nil
 }
 
+// Subscribe starts listening to events and returns Subscription.
 func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
-	return &Subscription{}, nil
+	wavaxStorage := newStorage(t.getStorageLoader(t.wavaxContract))
+	wusdcStorage := newStorage(t.getStorageLoader(t.wusdcContract))
+
+	s := newSubscription(wavaxStorage, wusdcStorage)
+	go s.loop(ctx)
+
+	return s, nil
 }
 
 func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
@@ -54,12 +62,7 @@ func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (st
 		return "", nil, fmt.Errorf("parse user address")
 	}
 
-	var pk tezos.PrivateKey
-	if tezos.IsEncryptedKey(t.privateKey) {
-		pk, err = tezos.ParsePrivateKey(t.privateKey)
-	} else {
-		pk, err = tezos.ParsePrivateKey(t.privateKey)
-	}
+	pk, err := tezos.ParsePrivateKey(t.privateKey)
 	if err != nil {
 		return "", nil, fmt.Errorf("parse private key: %w", err)
 	}
@@ -86,12 +89,7 @@ func (t *Tezos) MintWAVAX(ctx context.Context, user string, amount *big.Int) (st
 		return "", nil, fmt.Errorf("parse user address")
 	}
 
-	var pk tezos.PrivateKey
-	if tezos.IsEncryptedKey(t.privateKey) {
-		pk, err = tezos.ParsePrivateKey(t.privateKey)
-	} else {
-		pk, err = tezos.ParsePrivateKey(t.privateKey)
-	}
+	pk, err := tezos.ParsePrivateKey(t.privateKey)
 	if err != nil {
 		return "", nil, fmt.Errorf("parse private key: %w", err)
 	}
@@ -110,6 +108,29 @@ func (t *Tezos) MintWAVAX(ctx context.Context, user string, amount *big.Int) (st
 	}
 
 	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
+}
+
+func (t *Tezos) getStorageLoader(contract *contract.Contract) storageLoader {
+	return func(ctx context.Context) (map[string]interface{}, error) {
+		script, err := t.client.GetContractScript(ctx, contract.Address())
+		if err != nil {
+			return nil, fmt.Errorf("get contract script: %w", err)
+		}
+
+		val := micheline.NewValue(script.StorageType(), script.Storage)
+
+		m, err := val.Map()
+		if err != nil {
+			return nil, fmt.Errorf("get map: %w", err)
+		}
+
+		s, ok := m.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid map")
+		}
+
+		return s, nil
+	}
 }
 
 func (t *Tezos) loadContract(ctx context.Context, addr string, resolve bool) (*contract.Contract, error) {
