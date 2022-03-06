@@ -3,16 +3,12 @@ package avalanche
 import (
 	"context"
 	"crypto/ecdsa"
-	"errors"
 	"fmt"
 	"math/big"
 
 	"bridge-oracle/internal/avalanche/locker"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -26,10 +22,7 @@ type Avalanche struct {
 	privateKey string
 
 	client *ethclient.Client
-	sub    ethereum.Subscription
 }
-
-var ErrSubscriptionExists = errors.New("subscription already exists")
 
 func New(client *ethclient.Client, contractAddr string, privateKey string) *Avalanche {
 	return &Avalanche{
@@ -39,8 +32,7 @@ func New(client *ethclient.Client, contractAddr string, privateKey string) *Aval
 	}
 }
 
-// Init setups contract.
-func (a *Avalanche) Init() error {
+func (a *Avalanche) init() error {
 	instance, err := locker.NewLocker(a.contract, a.client)
 	if err != nil {
 		return fmt.Errorf("new locker: %w", err)
@@ -52,34 +44,27 @@ func (a *Avalanche) Init() error {
 
 // Subscribe creates subscription for the contract and returns Subscription instance.
 func (a *Avalanche) Subscribe(ctx context.Context) (*Subscription, error) {
-	if a.sub != nil {
-		return nil, ErrSubscriptionExists
+	if err := a.init(); err != nil {
+		return nil, fmt.Errorf("init: %w", err)
 	}
 
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{a.contract},
-	}
+	opts := &bind.WatchOpts{Context: ctx}
 
-	logs := make(chan types.Log)
-
-	sub, err := a.client.SubscribeFilterLogs(ctx, query, logs)
+	avaxEvents := make(chan *locker.LockerAVAXLocked)
+	avaxSub, err := a.locker.WatchAVAXLocked(opts, avaxEvents)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("watch avax: %w", err)
 	}
-	a.sub = sub
 
-	abiReader, err := loadABI("internal/avalanche/abi/LockManager.abi")
+	usdcEvents := make(chan *locker.LockerUSDCLocked)
+	usdcSub, err := a.locker.WatchUSDCLocked(opts, usdcEvents)
 	if err != nil {
-		return nil, fmt.Errorf("load abi: %w", err)
+		return nil, fmt.Errorf("watch avax: %w", err)
 	}
 
-	contractAbi, err := abi.JSON(abiReader)
-	if err != nil {
-		return nil, fmt.Errorf("abi json: %w", err)
-	}
-
-	s := newSubscription(contractAbi)
-	go s.loop(logs)
+	s := newSubscription()
+	go s.loopAVAX(ctx, avaxSub, avaxEvents)
+	go s.loopUSDC(ctx, usdcSub, usdcEvents)
 
 	return s, nil
 }

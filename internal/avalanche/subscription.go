@@ -1,27 +1,25 @@
 package avalanche
 
 import (
-	"fmt"
+	"context"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	"bridge-oracle/internal/avalanche/locker"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 type Subscription struct {
 	onAVAXLocked chan LockEvent
 	onUSDCLocked chan LockEvent
 
-	abi  abi.ABI
 	errs chan error
 }
 
 type LockEvent struct {
 	user        common.Address
 	amount      *big.Int
-	destination common.Address
+	destination string
 }
 
 func (e LockEvent) User() string {
@@ -33,22 +31,13 @@ func (e LockEvent) Amount() *big.Int {
 }
 
 func (e LockEvent) Destination() string {
-	return e.destination.Hex()
+	return e.destination
 }
 
-var (
-	avaxLockedSig = []byte("AVAXLocked(address,uint256,string)")
-	usdcLockedSig = []byte("USDCLocked(address,uint256,string)")
-
-	avaxLockedSigHash = crypto.Keccak256Hash(avaxLockedSig)
-	usdcLockedSigHash = crypto.Keccak256Hash(usdcLockedSig)
-)
-
-func newSubscription(abi abi.ABI) *Subscription {
+func newSubscription() *Subscription {
 	return &Subscription{
 		onAVAXLocked: make(chan LockEvent),
 		onUSDCLocked: make(chan LockEvent),
-		abi:          abi,
 		errs:         make(chan error),
 	}
 }
@@ -65,21 +54,46 @@ func (s *Subscription) Err() <-chan error {
 	return s.errs
 }
 
-func (s *Subscription) loop(logs <-chan types.Log) {
-	for v := range logs {
-		switch v.Topics[0].Hex() {
-		case avaxLockedSigHash.Hex():
-			var event LockEvent
-			if err := s.abi.UnpackIntoInterface(&event, "AVAXLocked", v.Data); err != nil {
-				s.errs <- fmt.Errorf("unpack AVAXLocked event: %w", err)
+func (s *Subscription) loopAVAX(
+	ctx context.Context,
+	avaxSub event.Subscription,
+	avaxEvents <-chan *locker.LockerAVAXLocked,
+) {
+	for {
+		select {
+		case <-ctx.Done():
+			avaxSub.Unsubscribe()
+			return
+		case ev := <-avaxEvents:
+			s.onAVAXLocked <- LockEvent{
+				user:        ev.User,
+				amount:      ev.Amount,
+				destination: ev.Destination,
 			}
-			s.onAVAXLocked <- event
-		case usdcLockedSigHash.Hex():
-			var event LockEvent
-			if err := s.abi.UnpackIntoInterface(&event, "USDCLocked", v.Data); err != nil {
-				s.errs <- fmt.Errorf("unpack USDCLocked event: %w", err)
+		case err := <-avaxSub.Err():
+			s.errs <- err
+		}
+	}
+}
+
+func (s *Subscription) loopUSDC(
+	ctx context.Context,
+	usdcSub event.Subscription,
+	usdcEvents <-chan *locker.LockerUSDCLocked,
+) {
+	for {
+		select {
+		case <-ctx.Done():
+			usdcSub.Unsubscribe()
+			return
+		case ev := <-usdcEvents:
+			s.onUSDCLocked <- LockEvent{
+				user:        ev.User,
+				amount:      ev.Amount,
+				destination: ev.Destination,
 			}
-			s.onUSDCLocked <- event
+		case err := <-usdcSub.Err():
+			s.errs <- err
 		}
 	}
 }
