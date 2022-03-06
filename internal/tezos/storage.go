@@ -40,14 +40,14 @@ func (s *Storage) UpdateBurnings(ctx context.Context) ([]Burning, error) {
 		return nil, fmt.Errorf("load storage: %w", err)
 	}
 
-	burningsData, ok := current["burningsData"]
+	burningsData, ok := current["burnings"]
 	if !ok {
 		return nil, fmt.Errorf("invalid map")
 	}
 
 	data, err := json.Marshal(burningsData)
 	if err != nil {
-		return nil, fmt.Errorf("marshal burningsData: %w", err)
+		return nil, fmt.Errorf("marshal burnings: %w", err)
 	}
 
 	var burnings map[string]Burning
