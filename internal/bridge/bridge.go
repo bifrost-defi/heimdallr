@@ -74,7 +74,7 @@ func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSu
 }
 
 func (b *Bridge) mintWAVAX(ctx context.Context, event Event) {
-	hash, fee, err := b.tezos.MintWAVAX(ctx, event.Destination(), event.Amount())
+	hash, fee, err := b.tezos.MintWAVAX(ctx, event.Amount())
 	if err != nil {
 		b.logger.Errorf("mint wavax: %s", err)
 
@@ -88,10 +88,25 @@ func (b *Bridge) mintWAVAX(ctx context.Context, event Event) {
 		zap.String("tx_hash", hash),
 		zap.Int64("fee", fee.Int64()),
 	).Info("wavax minted")
+
+	hash, fee, err = b.tezos.TransferWAVAX(ctx, event.Destination(), event.Amount())
+	if err != nil {
+		b.logger.Errorf("mint wavax: %s", err)
+
+		return
+	}
+
+	b.logger.With(
+		zap.String("user", event.User()),
+		zap.Int64("amount", event.Amount().Int64()),
+		zap.String("destination", event.Destination()),
+		zap.String("tx_hash", hash),
+		zap.Int64("fee", fee.Int64()),
+	).Info("wavax transferred")
 }
 
 func (b *Bridge) mintWUSDC(ctx context.Context, event Event) {
-	hash, fee, err := b.tezos.MintWUSDC(ctx, event.Destination(), event.Amount())
+	hash, fee, err := b.tezos.MintWUSDC(ctx, event.Amount())
 	if err != nil {
 		b.logger.Errorf("mint wusdc: %s", err)
 
@@ -105,6 +120,21 @@ func (b *Bridge) mintWUSDC(ctx context.Context, event Event) {
 		zap.String("tx_hash", hash),
 		zap.Int64("fee", fee.Int64()),
 	).Info("wusdc minted")
+
+	hash, fee, err = b.tezos.TransferWUSDC(ctx, event.Destination(), event.Amount())
+	if err != nil {
+		b.logger.Errorf("transfer wusdc: %s", err)
+
+		return
+	}
+
+	b.logger.With(
+		zap.String("user", event.User()),
+		zap.Int64("amount", event.Amount().Int64()),
+		zap.String("destination", event.Destination()),
+		zap.String("tx_hash", hash),
+		zap.Int64("fee", fee.Int64()),
+	).Info("wusdc transferred")
 }
 
 func (b *Bridge) unlockAVAX(ctx context.Context, event Event) {

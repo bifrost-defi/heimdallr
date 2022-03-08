@@ -56,19 +56,13 @@ func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
 	return s, nil
 }
 
-func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
-	userAddr, err := tezos.ParseAddress(user)
-	if err != nil {
-		return "", nil, fmt.Errorf("parse user address: %w", err)
-	}
-
+func (t *Tezos) MintWUSDC(ctx context.Context, amount *big.Int) (string, *big.Int, error) {
 	pk, err := tezos.ParsePrivateKey(t.privateKey)
 	if err != nil {
 		return "", nil, fmt.Errorf("parse private key: %w", err)
 	}
 
 	wusdc := TokenMint{
-		User:   userAddr,
 		Amount: tezos.Z(*amount),
 	}
 	opts := &contract.CallOptions{
@@ -83,7 +77,7 @@ func (t *Tezos) MintWUSDC(ctx context.Context, user string, amount *big.Int) (st
 	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
 }
 
-func (t *Tezos) MintWAVAX(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
+func (t *Tezos) TransferWUSDC(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
 	userAddr, err := tezos.ParseAddress(user)
 	if err != nil {
 		return "", nil, fmt.Errorf("parse user address: %w", err)
@@ -94,15 +88,65 @@ func (t *Tezos) MintWAVAX(ctx context.Context, user string, amount *big.Int) (st
 		return "", nil, fmt.Errorf("parse private key: %w", err)
 	}
 
-	wavax := TokenMint{
-		User:   userAddr,
+	transfer := contract.FA1Transfer{
+		From:   pk.Address(),
+		To:     userAddr,
 		Amount: tezos.Z(*amount),
 	}
 	opts := &contract.CallOptions{
 		Signer: newSigner(pk),
 	}
 
-	tx, err := t.wavaxContract.Call(ctx, &TokenMintArgs{Mint: wavax}, opts)
+	tx, err := t.wusdcContract.Call(ctx, &contract.FA1TransferArgs{Transfer: transfer}, opts)
+	if err != nil {
+		return "", nil, fmt.Errorf("call contract: %w", err)
+	}
+
+	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
+}
+
+func (t *Tezos) MintWAVAX(ctx context.Context, amount *big.Int) (string, *big.Int, error) {
+	pk, err := tezos.ParsePrivateKey(t.privateKey)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse private key: %w", err)
+	}
+
+	mint := TokenMint{
+		Amount: tezos.Z(*amount),
+	}
+	opts := &contract.CallOptions{
+		Signer: newSigner(pk),
+	}
+
+	tx, err := t.wavaxContract.Call(ctx, &TokenMintArgs{Mint: mint}, opts)
+	if err != nil {
+		return "", nil, fmt.Errorf("call contract: %w", err)
+	}
+
+	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
+}
+
+func (t *Tezos) TransferWAVAX(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
+	userAddr, err := tezos.ParseAddress(user)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse user address: %w", err)
+	}
+
+	pk, err := tezos.ParsePrivateKey(t.privateKey)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse private key: %w", err)
+	}
+
+	transfer := contract.FA1Transfer{
+		From:   pk.Address(),
+		To:     userAddr,
+		Amount: tezos.Z(*amount),
+	}
+	opts := &contract.CallOptions{
+		Signer: newSigner(pk),
+	}
+
+	tx, err := t.wavaxContract.Call(ctx, &contract.FA1TransferArgs{Transfer: transfer}, opts)
 	if err != nil {
 		return "", nil, fmt.Errorf("call contract: %w", err)
 	}

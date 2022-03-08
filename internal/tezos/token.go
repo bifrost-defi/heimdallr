@@ -8,8 +8,7 @@ import (
 )
 
 type TokenMint struct {
-	User   tezos.Address `json:"user"`
-	Amount tezos.Z       `json:"amount"`
+	Amount tezos.Z `json:"amount"`
 }
 
 type TokenMintArgs struct {
@@ -19,11 +18,8 @@ type TokenMintArgs struct {
 
 func (a TokenMintArgs) Parameters() *micheline.Parameters {
 	return &micheline.Parameters{
-		Entrypoint: "mintAndTransfer",
-		Value: micheline.NewPair(
-			micheline.NewBytes(a.Mint.User.Bytes22()),
-			micheline.NewNat(a.Mint.Amount.Big()),
-		),
+		Entrypoint: "mint",
+		Value:      micheline.NewNat(a.Mint.Amount.Big()),
 	}
 }
 
