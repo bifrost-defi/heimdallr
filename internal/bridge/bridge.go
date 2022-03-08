@@ -59,24 +59,28 @@ func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSu
 		// Handle events from chains and call another chain
 		case event := <-avaSub.OnAVAXLocked():
 			swap := atomic.NewOperation(
+				WithName("mint WAVAX"),
 				OnPerform(b.mintWAVAX),
 				OnRollback(b.unlockAVAX),
 			)
 			go swap.Run(ctx, event)
 		case event := <-avaSub.OnUSDCLocked():
 			swap := atomic.NewOperation(
+				WithName("mint WUSDC"),
 				OnPerform(b.mintWUSDC),
 				OnRollback(b.unlockUSDC),
 			)
 			go swap.Run(ctx, event)
 		case event := <-tzsSub.OnWAVAXBurned():
 			swap := atomic.NewOperation(
+				WithName("unlock AVAX"),
 				OnPerform(b.unlockAVAX),
 				OnRollback(b.mintWAVAX),
 			)
 			go swap.Run(ctx, event)
 		case event := <-tzsSub.OnWUSDCBurned():
 			swap := atomic.NewOperation(
+				WithName("unlock USDC"),
 				OnPerform(b.unlockUSDC),
 				OnRollback(b.mintWUSDC),
 			)

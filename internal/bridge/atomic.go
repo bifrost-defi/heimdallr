@@ -3,18 +3,25 @@ package bridge
 import (
 	"context"
 	"errors"
+	"fmt"
 )
 
 // Atomic represents wrapper for functions call
 // with rolling back if it is required after call.
 type Atomic struct {
-	errs chan error
+	options []Option
+	errs    chan error
 }
 
-var ErrRollbackFailed = errors.New("rollback failed")
+var (
+	ErrNothingToPerform = errors.New("nothing to perform")
+	ErrRollbackFailed   = errors.New("rollback failed")
+)
 
-func NewAtomic() *Atomic {
-	return &Atomic{errs: make(chan error)}
+// NewAtomic return Atomic instance with options that will be applied
+// for every operation created from this instance.
+func NewAtomic(options ...Option) *Atomic {
+	return &Atomic{options: options, errs: make(chan error)}
 }
 
 func (a *Atomic) Errs() <-chan error {
@@ -22,6 +29,8 @@ func (a *Atomic) Errs() <-chan error {
 }
 
 type Operation struct {
+	name string
+
 	perform  Fn
 	rollback Fn
 
@@ -40,22 +49,38 @@ func (f optionFn) apply(o *Operation) {
 	f(o)
 }
 
+// WithName sets the name of an operation.
+func WithName(s string) Option {
+	return optionFn(func(o *Operation) {
+		o.name = s
+	})
+}
+
+// OnPerform sets function than should be run by operation.
 func OnPerform(fn Fn) Option {
-	return optionFn(func(a *Operation) {
-		a.perform = fn
+	return optionFn(func(o *Operation) {
+		o.perform = fn
 	})
 }
 
+// OnRollback sets rollback function for operation.
 func OnRollback(fn Fn) Option {
-	return optionFn(func(a *Operation) {
-		a.rollback = fn
+	return optionFn(func(o *Operation) {
+		o.rollback = fn
 	})
 }
 
+// NewOperation creates operation from options.
+// Global options will be overwritten on collision.
 func (a *Atomic) NewOperation(options ...Option) *Operation {
 	o := new(Operation)
 	o.errs = a.errs
 
+	// Apply global options first.
+	for _, op := range a.options {
+		op.apply(o)
+	}
+	// Apply operation options. Global options will be overwritten.
 	for _, op := range options {
 		op.apply(o)
 	}
@@ -63,20 +88,23 @@ func (a *Atomic) NewOperation(options ...Option) *Operation {
 	return o
 }
 
-func (a *Operation) Run(ctx context.Context, event Event) {
-	if a.perform == nil {
+// Run runs operation and controls its depending on options.
+func (o *Operation) Run(ctx context.Context, event Event) {
+	if o.perform == nil {
+		o.errs <- fmt.Errorf("%s: %w", o.name, ErrNothingToPerform)
+
 		return
 	}
 
-	if ok := a.perform(ctx, event); ok {
+	if ok := o.perform(ctx, event); ok {
 		// Everything fine
 		return
 	}
 
-	if a.rollback != nil {
-		if ok := a.rollback(ctx, event); !ok {
+	if o.rollback != nil {
+		if ok := o.rollback(ctx, event); !ok {
 			// Nothing fine
-			a.errs <- ErrRollbackFailed
+			o.errs <- fmt.Errorf("%s: %w", o.name, ErrRollbackFailed)
 		}
 	}
 }
