@@ -10,7 +10,6 @@ import (
 // with rolling back if it is required after call.
 type Atomic struct {
 	options []Option
-	errs    chan error
 }
 
 var (
@@ -18,26 +17,35 @@ var (
 	ErrRollbackFailed   = errors.New("rollback failed")
 )
 
-// NewAtomic return Atomic instance with options that will be applied
+// NewAtomic returns Atomic instance with options that will be applied
 // for every operation created from this instance.
 func NewAtomic(options ...Option) *Atomic {
-	return &Atomic{options: options, errs: make(chan error)}
-}
-
-func (a *Atomic) Errs() <-chan error {
-	return a.errs
+	return &Atomic{options: options}
 }
 
 type Operation struct {
 	name string
 
-	perform  Fn
-	rollback Fn
+	performFn  Fn
+	rollbackFn Fn
+	checkerFn  CheckerFn
 
-	errs chan<- error
+	completeCh chan struct{}
+	rollbackCh chan struct{}
+	failCh     chan error
 }
 
-type Fn func(ctx context.Context, event Event) (ok bool)
+type (
+	Fn func(ctx context.Context, event Event) (ok bool)
+
+	// Checker exposes methods for operation state checking.
+	Checker interface {
+		Complete() <-chan struct{}
+		Rollback() <-chan struct{}
+		Fail() <-chan error
+	}
+	CheckerFn func(op Checker, event Event)
+)
 
 type Option interface {
 	apply(*Operation)
@@ -59,14 +67,22 @@ func WithName(s string) Option {
 // OnPerform sets function than should be run by operation.
 func OnPerform(fn Fn) Option {
 	return optionFn(func(o *Operation) {
-		o.perform = fn
+		o.performFn = fn
 	})
 }
 
 // OnRollback sets rollback function for operation.
 func OnRollback(fn Fn) Option {
 	return optionFn(func(o *Operation) {
-		o.rollback = fn
+		o.rollbackFn = fn
+	})
+}
+
+// WithChecker sets function which takes Checker and Event to
+// access operation state.
+func WithChecker(fn CheckerFn) Option {
+	return optionFn(func(o *Operation) {
+		o.checkerFn = fn
 	})
 }
 
@@ -74,7 +90,9 @@ func OnRollback(fn Fn) Option {
 // Global options will be overwritten on collision.
 func (a *Atomic) NewOperation(options ...Option) *Operation {
 	o := new(Operation)
-	o.errs = a.errs
+	o.completeCh = make(chan struct{})
+	o.rollbackCh = make(chan struct{})
+	o.failCh = make(chan error)
 
 	// Apply global options first.
 	for _, op := range a.options {
@@ -90,21 +108,46 @@ func (a *Atomic) NewOperation(options ...Option) *Operation {
 
 // Run runs operation and controls its depending on options.
 func (o *Operation) Run(ctx context.Context, event Event) {
-	if o.perform == nil {
-		o.errs <- fmt.Errorf("%s: %w", o.name, ErrNothingToPerform)
+	if o.checkerFn != nil {
+		go o.checkerFn(o, event)
+	}
+
+	if o.performFn == nil {
+		o.failCh <- fmt.Errorf("%s: %w", o.name, ErrNothingToPerform)
 
 		return
 	}
 
-	if ok := o.perform(ctx, event); ok {
+	if ok := o.performFn(ctx, event); ok {
 		// Everything fine
+		close(o.completeCh)
+
 		return
 	}
 
-	if o.rollback != nil {
-		if ok := o.rollback(ctx, event); !ok {
+	if o.rollbackFn != nil {
+		if ok := o.rollbackFn(ctx, rollbackEvent(event)); !ok {
 			// Nothing fine
-			o.errs <- fmt.Errorf("%s: %w", o.name, ErrRollbackFailed)
+			// TODO?: try to repeat operation on failure
+			o.failCh <- fmt.Errorf("%s: %w", o.name, ErrRollbackFailed)
+
+			return
 		}
+		close(o.rollbackCh)
 	}
+}
+
+// Complete returns chan which is closed if operation completed successfully.
+func (o *Operation) Complete() <-chan struct{} {
+	return o.completeCh
+}
+
+// Rollback returns chan which is closed if operation rolled back.
+func (o *Operation) Rollback() <-chan struct{} {
+	return o.rollbackCh
+}
+
+// Fail returns error if operation failed.
+func (o *Operation) Fail() <-chan error {
+	return o.failCh
 }

@@ -31,7 +31,7 @@ func (s *AtomicSuite) TestFailedRollback() {
 	)
 	op.Run(nil, nil)
 
-	require.Equal(s.T(), <-s.atomic.Errs(), ErrRollbackFailed)
+	require.Equal(s.T(), <-op.Fail(), ErrRollbackFailed)
 }
 
 func TestAtomic(t *testing.T) {

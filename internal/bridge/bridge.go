@@ -48,7 +48,9 @@ func (b *Bridge) Run(ctx context.Context) error {
 }
 
 func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSub *tezos.Subscription) {
-	atomic := NewAtomic()
+	atomic := NewAtomic(
+		WithChecker(b.checkOperation),
+	)
 
 	for {
 		select {
@@ -91,8 +93,6 @@ func (b *Bridge) loop(ctx context.Context, avaSub *avalanche.Subscription, tzsSu
 			b.logger.Errorf("avalanche subscribtion error: %s", err)
 		case err := <-tzsSub.Err():
 			b.logger.Errorf("tezos subscribtion error: %s", err)
-		case err := <-atomic.Errs():
-			b.logger.Errorf("atomic operation error: %s", err)
 		}
 	}
 }
@@ -201,4 +201,29 @@ func (b *Bridge) unlockUSDC(ctx context.Context, event Event) bool {
 	).Info("usdc unlocked")
 
 	return true
+}
+func (b *Bridge) checkOperation(op Checker, event Event) {
+	select {
+	case <-op.Complete():
+		b.logger.With(
+			zap.String("from", event.User()),
+			zap.String("to", event.Destination()),
+			zap.Int64("amount", event.Amount().Int64()),
+		).Info("swap complete")
+	case <-op.Rollback():
+		b.logger.With(
+			zap.String("from", event.User()),
+			zap.String("to", event.Destination()),
+			zap.Int64("amount", event.Amount().Int64()),
+		).Info("swap rolled back")
+	// Should not happen ever, because operation failing leads to coins lost.
+	// Only contract owner will be able to unlock or mint lost coins.
+	case err := <-op.Fail():
+		b.logger.With(
+			zap.String("from", event.User()),
+			zap.String("to", event.Destination()),
+			zap.Int64("amount", event.Amount().Int64()),
+			zap.Error(err),
+		).Debug("swap failed")
+	}
 }
