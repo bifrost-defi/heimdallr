@@ -10,7 +10,7 @@ import (
 )
 
 type Storage struct {
-	load       storageLoader
+	load       bigmapLoader
 	value      map[string]interface{}
 	lastUpdate time.Time
 }
@@ -22,9 +22,9 @@ type Burning struct {
 	Ts          time.Time     `json:"ts"`
 }
 
-type storageLoader func(ctx context.Context) (map[string]interface{}, error)
+type bigmapLoader func(ctx context.Context, name string) (map[string]interface{}, error)
 
-func newStorage(load storageLoader) *Storage {
+func newStorage(load bigmapLoader) *Storage {
 	return &Storage{
 		load:       load,
 		value:      make(map[string]interface{}),
@@ -35,17 +35,12 @@ func newStorage(load storageLoader) *Storage {
 // UpdateBurnings compares last storage state with new one and returns new entries of burnings.
 // New state will be saved for the next usage.
 func (s *Storage) UpdateBurnings(ctx context.Context) ([]Burning, error) {
-	current, err := s.load(ctx)
+	current, err := s.load(ctx, "burnings")
 	if err != nil {
-		return nil, fmt.Errorf("load storage: %w", err)
+		return nil, fmt.Errorf("load bigmap: %w", err)
 	}
 
-	burningsData, ok := current["burnings"]
-	if !ok {
-		return nil, fmt.Errorf("invalid map")
-	}
-
-	data, err := json.Marshal(burningsData)
+	data, err := json.Marshal(current)
 	if err != nil {
 		return nil, fmt.Errorf("marshal burnings: %w", err)
 	}

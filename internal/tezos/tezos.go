@@ -47,8 +47,8 @@ func (t *Tezos) LoadContracts(ctx context.Context, wavaxContractAddr string, wus
 
 // Subscribe starts listening to events and returns Subscription.
 func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
-	wavaxStorage := newStorage(t.getStorageLoader(t.wavaxContract))
-	wusdcStorage := newStorage(t.getStorageLoader(t.wusdcContract))
+	wavaxStorage := newStorage(t.getBigMapLoader(t.wavaxContract))
+	wusdcStorage := newStorage(t.getBigMapLoader(t.wusdcContract))
 
 	s := newSubscription(wavaxStorage, wusdcStorage)
 	go s.loop(ctx)
@@ -154,14 +154,15 @@ func (t *Tezos) TransferWAVAX(ctx context.Context, user string, amount *big.Int)
 	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
 }
 
-func (t *Tezos) getStorageLoader(contract *contract.Contract) storageLoader {
-	return func(ctx context.Context) (map[string]interface{}, error) {
-		script, err := t.client.GetContractScript(ctx, contract.Address())
+func (t *Tezos) getBigMapLoader(contract *contract.Contract) bigmapLoader {
+	return func(ctx context.Context, name string) (map[string]interface{}, error) {
+		script := contract.Script()
+		storage, err := t.client.GetContractStorage(ctx, contract.Address(), rpc.Head)
 		if err != nil {
-			return nil, fmt.Errorf("get contract script: %w", err)
+			return nil, fmt.Errorf("get contract storage: %w", err)
 		}
 
-		val := micheline.NewValue(script.StorageType(), script.Storage)
+		val := micheline.NewValue(script.StorageType(), storage)
 
 		m, err := val.Map()
 		if err != nil {
@@ -173,7 +174,38 @@ func (t *Tezos) getStorageLoader(contract *contract.Contract) storageLoader {
 			return nil, fmt.Errorf("invalid map")
 		}
 
-		return s, nil
+		burningsID, ok := s[name]
+		if !ok {
+			return nil, fmt.Errorf("burnings bigmap not found")
+		}
+
+		info, err := t.client.GetBigmapInfo(ctx, burningsID.(int64), rpc.Head)
+		if err != nil {
+			return nil, fmt.Errorf("get bigmap info: %w", err)
+		}
+
+		keys, err := t.client.ListBigmapKeys(ctx, burningsID.(int64), rpc.Head)
+		if err != nil {
+			return nil, fmt.Errorf("list bigmap values: %w", err)
+		}
+
+		bigmap := make(map[string]interface{}, len(keys))
+		for _, k := range keys {
+			v, err := t.client.GetBigmapValue(ctx, 17, k, rpc.Head)
+			if err != nil {
+				return nil, fmt.Errorf("get bigmap value: %w", err)
+			}
+
+			val := micheline.NewValue(micheline.NewType(info.ValueType), v)
+			m, err := val.Map()
+			if err != nil {
+				return nil, fmt.Errorf("map: %w", err)
+			}
+
+			bigmap[k.String()] = m
+		}
+
+		return bigmap, nil
 	}
 }
 

@@ -20,8 +20,8 @@ type Subscription struct {
 }
 
 const (
-	wavaxCheckInterval = 2 * time.Second
-	wusdcCheckInterval = 2 * time.Second
+	wavaxCheckInterval = 3 * time.Second
+	wusdcCheckInterval = 3 * time.Second
 )
 
 type BurnEvent struct {
