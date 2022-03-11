@@ -8,15 +8,15 @@ import (
 	"os/signal"
 
 	"blockwatch.cc/tzgo/rpc"
-	"bridge-oracle/config"
-	"bridge-oracle/internal/avalanche"
-	"bridge-oracle/internal/bridge"
-	"bridge-oracle/internal/server"
-	"bridge-oracle/internal/tezos"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
+	"heimdallr/config"
+	"heimdallr/internal/avalanche"
+	"heimdallr/internal/bridge"
+	"heimdallr/internal/server"
+	"heimdallr/internal/tezos"
 )
 
 func main() {

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"bridge-oracle/internal/avalanche/locker"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"heimdallr/internal/avalanche/locker"
 )
 
 type Avalanche struct {

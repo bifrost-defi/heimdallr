@@ -4,9 +4,9 @@ import (
 	"context"
 	"math/big"
 
-	"bridge-oracle/internal/avalanche/locker"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"heimdallr/internal/avalanche/locker"
 )
 
 type Subscription struct {

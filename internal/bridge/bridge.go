@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"bridge-oracle/internal/avalanche"
-	"bridge-oracle/internal/tezos"
 	"go.uber.org/zap"
+	"heimdallr/internal/avalanche"
+	"heimdallr/internal/tezos"
 )
 
 type Bridge struct {

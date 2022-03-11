@@ -1,4 +1,4 @@
-module bridge-oracle
+module heimdallr
 
 go 1.17
 
