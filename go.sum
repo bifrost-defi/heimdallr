@@ -1,5 +1,7 @@
 blockwatch.cc/tzgo v0.11.2-0.20220216135416-56ba4d609f0d h1:UIp5nSQRUDFa48vQ9spvguzUEpKxbWb9Yue45wElmYs=
 blockwatch.cc/tzgo v0.11.2-0.20220216135416-56ba4d609f0d/go.mod h1:3ZLUqaM6WUDPeo0stojSWrJOR/9pQqJVcLoghpLfpMg=
+blockwatch.cc/tzgo v0.11.2-0.20220308123114-3018c1b07d87 h1:0uqHwhCy/qTzj2IcIv+s8AQdJeRAkj+aNI0ozJwecKE=
+blockwatch.cc/tzgo v0.11.2-0.20220308123114-3018c1b07d87/go.mod h1:3ZLUqaM6WUDPeo0stojSWrJOR/9pQqJVcLoghpLfpMg=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=

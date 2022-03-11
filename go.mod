@@ -3,7 +3,7 @@ module heimdallr
 go 1.17
 
 require (
-	blockwatch.cc/tzgo v0.11.2-0.20220216135416-56ba4d609f0d
+	blockwatch.cc/tzgo v0.11.2-0.20220308123114-3018c1b07d87
 	github.com/caarlos0/env/v6 v6.9.1
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/go-chi/chi v1.5.4

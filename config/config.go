@@ -8,7 +8,8 @@ import (
 
 type Config struct {
 	Avalanche struct {
-		URL        string `env:"AVALANCHE_URL"`
+		RPC        string `env:"AVALANCHE_RPC_URL"`
+		WS         string `env:"AVALANCHE_WS_URL"`
 		Contract   string `env:"AVALANCHE_CONTRACT"`
 		PrivateKey string `env:"AVALANCHE_PRIVATE_KEY"`
 	}

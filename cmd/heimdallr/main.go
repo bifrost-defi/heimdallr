@@ -44,12 +44,17 @@ func main() {
 		sugar.Debug("shutdown")
 	}()
 
-	avaClient, err := ethclient.Dial(c.Avalanche.URL)
+	avaRPCClient, err := ethclient.Dial(c.Avalanche.RPC)
 	if err != nil {
-		err = fmt.Errorf("avalanche dial: %w", err)
+		err = fmt.Errorf("avalanche rpc dial: %w", err)
 		sugar.Fatal(err)
 	}
-	ava := avalanche.New(avaClient, c.Avalanche.Contract, c.Avalanche.PrivateKey)
+	avaWSClient, err := ethclient.Dial(c.Avalanche.WS)
+	if err != nil {
+		err = fmt.Errorf("avalanche rpc dial: %w", err)
+		sugar.Fatal(err)
+	}
+	ava := avalanche.New(avaRPCClient, avaWSClient, c.Avalanche.Contract, c.Avalanche.PrivateKey)
 
 	tzsClient, err := rpc.NewClient(c.Tezos.URL, nil)
 	if err != nil {

@@ -21,19 +21,21 @@ type Avalanche struct {
 
 	privateKey string
 
-	client *ethclient.Client
+	rpc *ethclient.Client
+	ws  *ethclient.Client
 }
 
-func New(client *ethclient.Client, contractAddr string, privateKey string) *Avalanche {
+func New(rpc *ethclient.Client, ws *ethclient.Client, contractAddr string, privateKey string) *Avalanche {
 	return &Avalanche{
 		contract:   common.HexToAddress(contractAddr),
 		privateKey: privateKey,
-		client:     client,
+		rpc:        rpc,
+		ws:         ws,
 	}
 }
 
 func (a *Avalanche) init() error {
-	instance, err := locker.NewLocker(a.contract, a.client)
+	instance, err := locker.NewLocker(a.contract, a.ws)
 	if err != nil {
 		return fmt.Errorf("new locker: %w", err)
 	}
@@ -112,17 +114,17 @@ func (a *Avalanche) createTransactor(ctx context.Context) (*bind.TransactOpts, e
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	nonce, err := a.client.PendingNonceAt(ctx, fromAddress)
+	nonce, err := a.rpc.PendingNonceAt(ctx, fromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("pending nonce: %w", err)
 	}
 
-	gasPrice, err := a.client.SuggestGasPrice(ctx)
+	gasPrice, err := a.rpc.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("suggest gas price: %w", err)
 	}
 
-	chainID, err := a.client.ChainID(ctx)
+	chainID, err := a.rpc.ChainID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get chain id: %w", err)
 	}
