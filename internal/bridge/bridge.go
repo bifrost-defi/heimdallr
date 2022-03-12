@@ -42,6 +42,7 @@ func (b *Bridge) Run(ctx context.Context) error {
 		return fmt.Errorf("subscribe tezos: %w", err)
 	}
 
+	b.logger.Info("Heimdallr is watching")
 	b.loop(ctx, avaSub, tzsSub)
 
 	return nil
