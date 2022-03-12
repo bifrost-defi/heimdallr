@@ -1,7 +1,3 @@
-blockwatch.cc/tzgo v0.11.2-0.20220216135416-56ba4d609f0d h1:UIp5nSQRUDFa48vQ9spvguzUEpKxbWb9Yue45wElmYs=
-blockwatch.cc/tzgo v0.11.2-0.20220216135416-56ba4d609f0d/go.mod h1:3ZLUqaM6WUDPeo0stojSWrJOR/9pQqJVcLoghpLfpMg=
-blockwatch.cc/tzgo v0.11.2-0.20220308123114-3018c1b07d87 h1:0uqHwhCy/qTzj2IcIv+s8AQdJeRAkj+aNI0ozJwecKE=
-blockwatch.cc/tzgo v0.11.2-0.20220308123114-3018c1b07d87/go.mod h1:3ZLUqaM6WUDPeo0stojSWrJOR/9pQqJVcLoghpLfpMg=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=
@@ -370,6 +366,8 @@ github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasO
 github.com/spf13/cast v1.3.0/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
 github.com/spf13/cobra v0.0.3/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
 github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
+github.com/sputnik-defi/tzgo v0.11.2-0.20220312092604-86910caa5843 h1:04+qWTtRa9qsywNgRdAWuhXc59lvLIqnE9KxVzjEKlY=
+github.com/sputnik-defi/tzgo v0.11.2-0.20220312092604-86910caa5843/go.mod h1:3ZLUqaM6WUDPeo0stojSWrJOR/9pQqJVcLoghpLfpMg=
 github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4 h1:Gb2Tyox57NRNuZ2d3rmvB3pcmbu7O1RS3m8WRx7ilrg=
 github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4/go.mod h1:RZLeN1LMWmRsyYjvAu+I6Dm9QmlDaIIt+Y+4Kd7Tp+Q=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

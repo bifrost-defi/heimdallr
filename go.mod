@@ -37,3 +37,5 @@ require (
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
+
+replace blockwatch.cc/tzgo v0.11.2-0.20220308123114-3018c1b07d87 => github.com/sputnik-defi/tzgo v0.11.2-0.20220312092604-86910caa5843
