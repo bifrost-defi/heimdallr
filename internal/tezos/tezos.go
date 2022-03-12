@@ -207,7 +207,7 @@ func (t *Tezos) getBigMapLoader(contract *contract.Contract) bigmapLoader {
 
 		bigmap := make(map[string]interface{}, len(keys))
 		for _, k := range keys {
-			v, err := t.client.GetBigmapValue(ctx, 17, k, rpc.Head)
+			v, err := t.client.GetBigmapValue(ctx, burningsID.(int64), k, rpc.Head)
 			if err != nil {
 				return nil, fmt.Errorf("get bigmap value: %w", err)
 			}
