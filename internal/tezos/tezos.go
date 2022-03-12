@@ -22,6 +22,8 @@ type Tezos struct {
 	client *rpc.Client
 }
 
+const confirmations = 5
+
 func New(client *rpc.Client, privateKey string) *Tezos {
 	return &Tezos{
 		privateKey: privateKey,
@@ -30,6 +32,11 @@ func New(client *rpc.Client, privateKey string) *Tezos {
 }
 
 func (t *Tezos) LoadContracts(ctx context.Context, wavaxContractAddr string, wusdcContractAddr string) error {
+	if err := t.client.Init(ctx); err != nil {
+		return fmt.Errorf("init client id: %w", err)
+	}
+	t.client.Listen()
+
 	wavax, err := t.loadContract(ctx, wavaxContractAddr, true)
 	if err != nil {
 		return fmt.Errorf("load wavax contract: %w", err)
@@ -62,14 +69,17 @@ func (t *Tezos) MintWUSDC(ctx context.Context, amount *big.Int) (string, *big.In
 		return "", nil, fmt.Errorf("parse private key: %w", err)
 	}
 
-	wusdc := TokenMint{
-		Amount: tezos.Z(*amount),
+	mint := TokenMint{
+		Value: tezos.Z(*amount),
 	}
 	opts := &contract.CallOptions{
-		Signer: newSigner(pk),
+		Confirmations: confirmations,
+		TTL:           120,
+		Signer:        newSigner(pk),
 	}
+	args := &TokenMintArgs{Mint: mint}
 
-	tx, err := t.wusdcContract.Call(ctx, &TokenMintArgs{Mint: wusdc}, opts)
+	tx, err := t.wusdcContract.Call(ctx, args, opts)
 	if err != nil {
 		return "", nil, fmt.Errorf("call contract: %w", err)
 	}
@@ -94,7 +104,9 @@ func (t *Tezos) TransferWUSDC(ctx context.Context, user string, amount *big.Int)
 		Amount: tezos.Z(*amount),
 	}
 	opts := &contract.CallOptions{
-		Signer: newSigner(pk),
+		Confirmations: confirmations,
+		TTL:           120,
+		Signer:        newSigner(pk),
 	}
 
 	tx, err := t.wusdcContract.Call(ctx, &contract.FA1TransferArgs{Transfer: transfer}, opts)
@@ -112,10 +124,12 @@ func (t *Tezos) MintWAVAX(ctx context.Context, amount *big.Int) (string, *big.In
 	}
 
 	mint := TokenMint{
-		Amount: tezos.Z(*amount),
+		Value: tezos.Z(*amount),
 	}
 	opts := &contract.CallOptions{
-		Signer: newSigner(pk),
+		Confirmations: confirmations,
+		TTL:           120,
+		Signer:        newSigner(pk),
 	}
 
 	tx, err := t.wavaxContract.Call(ctx, &TokenMintArgs{Mint: mint}, opts)
@@ -143,7 +157,9 @@ func (t *Tezos) TransferWAVAX(ctx context.Context, user string, amount *big.Int)
 		Amount: tezos.Z(*amount),
 	}
 	opts := &contract.CallOptions{
-		Signer: newSigner(pk),
+		Confirmations: confirmations,
+		TTL:           120,
+		Signer:        newSigner(pk),
 	}
 
 	tx, err := t.wavaxContract.Call(ctx, &contract.FA1TransferArgs{Transfer: transfer}, opts)

@@ -8,7 +8,7 @@ import (
 )
 
 type TokenMint struct {
-	Amount tezos.Z `json:"amount"`
+	Value tezos.Z `json:"value"`
 }
 
 type TokenMintArgs struct {
@@ -19,14 +19,17 @@ type TokenMintArgs struct {
 func (a TokenMintArgs) Parameters() *micheline.Parameters {
 	return &micheline.Parameters{
 		Entrypoint: "mint",
-		Value:      micheline.NewNat(a.Mint.Amount.Big()),
+		Value:      micheline.NewNat(a.Mint.Value.Big()),
 	}
 }
 
 func (a TokenMintArgs) Encode() *codec.Transaction {
 	return &codec.Transaction{
 		Manager: codec.Manager{
-			Source: a.Source,
+			Source:       a.Source,
+			GasLimit:     100000,
+			Fee:          2000000,
+			StorageLimit: 10000,
 		},
 		Destination: a.Destination,
 		Parameters:  a.Parameters(),
