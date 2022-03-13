@@ -2,10 +2,12 @@ package bridge
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"heimdallr/internal/avalanche"
 )
 
 type AtomicSuite struct {
@@ -29,9 +31,9 @@ func (s *AtomicSuite) TestFailedRollback() {
 		OnPerform(f),
 		OnRollback(rf),
 	)
-	op.Run(nil, nil)
+	go op.Run(nil, avalanche.LockEvent{})
 
-	require.Equal(s.T(), <-op.Fail(), ErrRollbackFailed)
+	require.Equal(s.T(), true, errors.Is(<-op.Fail(), ErrRollbackFailed))
 }
 
 func TestAtomic(t *testing.T) {
