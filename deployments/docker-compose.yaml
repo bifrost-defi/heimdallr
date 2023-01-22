@@ -1,0 +1,8 @@
+version: '3'
+services:
+  heimdallr:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    env_file:
+      - ../.env
