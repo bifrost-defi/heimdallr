@@ -1,13 +1,12 @@
 ## Heimdallr
 
-Heimdallr is relay for swapping assets between Avalanche and Tezos networks.
+Heimdallr is oracle for swapping assets between Ethereum, Tezos and TON networks.
 
 ### Usage:
 
-Fill `./.env` file with environment variables as in the examples:
+Fill `./.env` file with environment variables as in the example:
 
-- `mainnet.tmpl.env` for the main network
-- `testnet.tmpl.env` for the test network
+- `./example.env` 
 
 Run:
 ```bash

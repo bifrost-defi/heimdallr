@@ -7,7 +7,8 @@ evm.compile:
 		 --overwrite
 
 evm.gen:
-	@abigen --abi $(AVA_PATH)/abi/LockManager.abi --pkg=locker --out=$(AVA_PATH)/locker/locker.go
+	@mkdir -p $(EVM_PATH)/wrapping-bridge/
+	@abigen --abi $(EVM_PATH)/abi/WrappingBridge.abi --pkg=wrappingBridge --out=$(EVM_PATH)/wrapping-bridge/bridge.go
 
 build:
 	@go build -o ./build/heimdallr ./cmd/heimdallr/*.go

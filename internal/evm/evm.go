@@ -10,15 +10,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"heimdallr/internal/evm/locker"
+	"heimdallr/internal/evm/wrapping-bridge"
 )
 
 type EVM struct {
 	// Bridge contract address
 	contract common.Address
 	// Bridge contract instance
-	// TODO
-	locker *locker.Locker
+	bridge *wrappingBridge.WrappingBridge
 
 	privateKey string
 
@@ -36,11 +35,11 @@ func New(rpc *ethclient.Client, ws *ethclient.Client, contractAddr string, priva
 }
 
 func (a *EVM) init() error {
-	instance, err := locker.NewLocker(a.contract, a.ws)
+	instance, err := wrappingBridge.NewWrappingBridge(a.contract, a.ws)
 	if err != nil {
-		return fmt.Errorf("new locker: %w", err)
+		return fmt.Errorf("new bridge: %w", err)
 	}
-	a.locker = instance
+	a.bridge = instance
 
 	return nil
 }
@@ -53,8 +52,8 @@ func (a *EVM) Subscribe(ctx context.Context) (*Subscription, error) {
 
 	opts := &bind.WatchOpts{Context: ctx}
 
-	ethEvents := make(chan *locker.LockerAVAXLocked)
-	ethSub, err := a.locker.WatchAVAXLocked(opts, ethEvents)
+	ethEvents := make(chan *wrappingBridge.WrappingBridgeLock)
+	ethSub, err := a.bridge.WatchLock(opts, ethEvents, nil)
 	if err != nil {
 		return nil, fmt.Errorf("watch eth: %w", err)
 	}
@@ -72,7 +71,7 @@ func (a *EVM) UnlockETH(ctx context.Context, user string, amount *big.Int) (stri
 	}
 
 	userAddress := common.HexToAddress(user)
-	tx, err := a.locker.UnlockAVAX(opts, userAddress, amount)
+	tx, err := a.bridge.Unlock(opts, userAddress, amount)
 	if err != nil {
 		return "", nil, fmt.Errorf("call unlock: %w", err)
 	}

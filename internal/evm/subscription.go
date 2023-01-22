@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"heimdallr/internal/evm/locker"
+	wrappingBridge "heimdallr/internal/evm/wrapping-bridge"
 )
 
 type Subscription struct {
@@ -55,7 +55,7 @@ func (s *Subscription) Err() <-chan error {
 func (s *Subscription) loop(
 	ctx context.Context,
 	sub event.Subscription,
-	events <-chan *locker.LockerAVAXLocked,
+	events <-chan *wrappingBridge.WrappingBridgeLock,
 ) {
 	for {
 		select {
@@ -64,9 +64,10 @@ func (s *Subscription) loop(
 			return
 		case ev := <-events:
 			s.onETHLocked <- LockEvent{
-				user:        ev.User,
-				amount:      ev.Amount,
-				destination: ev.Destination,
+				user:        ev.From,
+				amount:      ev.Value,
+				coinId:      int(ev.DestChain.Int64()),
+				destination: ev.DestAddress,
 			}
 		case err := <-sub.Err():
 			s.errs <- err
