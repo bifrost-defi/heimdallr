@@ -1,7 +1,6 @@
 package tezos
 
 import (
-	"blockwatch.cc/tzgo/signer"
 	"context"
 	"fmt"
 	"math/big"
@@ -9,6 +8,7 @@ import (
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
+	"blockwatch.cc/tzgo/signer"
 	"blockwatch.cc/tzgo/tezos"
 )
 
