@@ -5,6 +5,7 @@ import "math/big"
 type RollbackEvent struct {
 	user        string
 	amount      *big.Int
+	coinID      int
 	destination string
 }
 
@@ -16,6 +17,10 @@ func (e RollbackEvent) User() string {
 
 func (e RollbackEvent) Amount() *big.Int {
 	return e.amount
+}
+
+func (e RollbackEvent) CoinID() int {
+	return e.coinID
 }
 
 func (e RollbackEvent) Destination() string {

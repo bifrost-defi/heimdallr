@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"heimdallr/internal/avalanche"
+	"heimdallr/internal/evm"
 )
 
 type AtomicSuite struct {
@@ -31,7 +31,7 @@ func (s *AtomicSuite) TestFailedRollback() {
 		OnPerform(f),
 		OnRollback(rf),
 	)
-	go op.Run(nil, avalanche.LockEvent{})
+	go op.Run(nil, evm.LockEvent{})
 
 	require.Equal(s.T(), true, errors.Is(<-op.Fail(), ErrRollbackFailed))
 }

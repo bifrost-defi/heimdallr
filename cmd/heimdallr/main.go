@@ -13,8 +13,8 @@ import (
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"heimdallr/config"
-	"heimdallr/internal/avalanche"
 	"heimdallr/internal/bridge"
+	"heimdallr/internal/evm"
 	"heimdallr/internal/server"
 	"heimdallr/internal/tezos"
 )
@@ -44,17 +44,17 @@ func main() {
 		sugar.Debug("shutdown")
 	}()
 
-	avaRPCClient, err := ethclient.Dial(c.Avalanche.RPC)
+	ethRPCClient, err := ethclient.Dial(c.Ethereum.RPC)
 	if err != nil {
-		err = fmt.Errorf("avalanche rpc dial: %w", err)
+		err = fmt.Errorf("evm rpc dial: %w", err)
 		sugar.Fatal(err)
 	}
-	avaWSClient, err := ethclient.Dial(c.Avalanche.WS)
+	ethWSClient, err := ethclient.Dial(c.Ethereum.WS)
 	if err != nil {
-		err = fmt.Errorf("avalanche rpc dial: %w", err)
+		err = fmt.Errorf("evm rpc dial: %w", err)
 		sugar.Fatal(err)
 	}
-	ava := avalanche.New(avaRPCClient, avaWSClient, c.Avalanche.Contract, c.Avalanche.PrivateKey)
+	eth := evm.New(ethRPCClient, ethWSClient, c.Ethereum.BridgeContract, c.Ethereum.PrivateKey)
 
 	tzsClient, err := rpc.NewClient(c.Tezos.URL, nil)
 	if err != nil {
@@ -65,8 +65,7 @@ func main() {
 
 	if err := tzs.LoadContracts(
 		ctx,
-		c.Tezos.WAVAXContract,
-		c.Tezos.WUSDCContract,
+		c.Tezos.BridgeContract,
 	); err != nil {
 		err = fmt.Errorf("set tezos contract: %w", err)
 		sugar.Fatal(err)
@@ -74,7 +73,7 @@ func main() {
 
 	go runServer(ctx, sugar)
 
-	b := bridge.New(ava, tzs, sugar)
+	b := bridge.New(eth, tzs, sugar)
 	if err := b.Run(ctx); err != nil {
 		err = fmt.Errorf("run bridge: %w", err)
 		sugar.Fatal(err)

@@ -10,23 +10,19 @@ import (
 )
 
 type Subscription struct {
-	onWAVAXBurned chan BurnEvent
-	onWUSDCBurned chan BurnEvent
+	onTokenBurned chan BurnEvent
 
-	wavaxStorage *Storage
-	wusdcStorage *Storage
+	bridgeStorage *Storage
 
 	errs chan error
 }
 
-const (
-	wavaxCheckInterval = 3 * time.Second
-	wusdcCheckInterval = 3 * time.Second
-)
+const checkInterval = 3 * time.Second
 
 type BurnEvent struct {
 	user        tezos.Address
 	amount      *big.Int
+	coinId      int
 	destination string
 }
 
@@ -38,26 +34,24 @@ func (e BurnEvent) Amount() *big.Int {
 	return e.amount
 }
 
+func (e BurnEvent) CoinID() int {
+	return e.coinId
+}
+
 func (e BurnEvent) Destination() string {
 	return e.destination
 }
 
-func newSubscription(wavaxStorage *Storage, wusdcStorage *Storage) *Subscription {
+func newSubscription(bridgeStorage *Storage) *Subscription {
 	return &Subscription{
-		onWAVAXBurned: make(chan BurnEvent),
-		onWUSDCBurned: make(chan BurnEvent),
-		wavaxStorage:  wavaxStorage,
-		wusdcStorage:  wusdcStorage,
+		onTokenBurned: make(chan BurnEvent),
+		bridgeStorage: bridgeStorage,
 		errs:          make(chan error),
 	}
 }
 
-func (s *Subscription) OnWAVAXBurned() <-chan BurnEvent {
-	return s.onWAVAXBurned
-}
-
-func (s *Subscription) OnWUSDCBurned() <-chan BurnEvent {
-	return s.onWUSDCBurned
+func (s *Subscription) OnTokenBurned() <-chan BurnEvent {
+	return s.onTokenBurned
 }
 
 func (s *Subscription) Err() <-chan error {
@@ -65,48 +59,30 @@ func (s *Subscription) Err() <-chan error {
 }
 
 func (s *Subscription) loop(ctx context.Context) {
-	wavaxTick := time.NewTicker(wavaxCheckInterval)
-	wusdcTick := time.NewTicker(wusdcCheckInterval)
-	defer wavaxTick.Stop()
-	defer wusdcTick.Stop()
+	tick := time.NewTicker(checkInterval)
+	defer tick.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-wavaxTick.C:
-			s.checkWAVAXBurnings(ctx)
-		case <-wusdcTick.C:
-			s.checkWUSDCBurnings(ctx)
+		case <-tick.C:
+			s.checkBurnings(ctx)
 		}
 	}
 }
 
-func (s *Subscription) checkWAVAXBurnings(ctx context.Context) {
-	burnings, err := s.wavaxStorage.UpdateBurnings(ctx)
+func (s *Subscription) checkBurnings(ctx context.Context) {
+	burnings, err := s.bridgeStorage.UpdateBurnings(ctx)
 	if err != nil {
-		s.errs <- fmt.Errorf("update wavax burnings: %w", err)
+		s.errs <- fmt.Errorf("update burnings: %w", err)
 	}
 
 	for _, v := range burnings {
-		s.onWAVAXBurned <- BurnEvent{
+		s.onTokenBurned <- BurnEvent{
 			user:        v.User,
 			amount:      v.Amount.Big(),
-			destination: v.Destination,
-		}
-	}
-}
-
-func (s *Subscription) checkWUSDCBurnings(ctx context.Context) {
-	burnings, err := s.wusdcStorage.UpdateBurnings(ctx)
-	if err != nil {
-		s.errs <- fmt.Errorf("update wavax burnings: %w", err)
-	}
-
-	for _, v := range burnings {
-		s.onWUSDCBurned <- BurnEvent{
-			user:        v.User,
-			amount:      v.Amount.Big(),
+			coinId:      v.CoinID,
 			destination: v.Destination,
 		}
 	}
