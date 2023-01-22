@@ -1,6 +1,7 @@
 ## Heimdallr
 
-Heimdallr is oracle for swapping assets between Ethereum, Tezos and TON networks.
+Heimdallr is the sentry and the guardians of the gods. As watchman, he guards the bridge Bifröst against the approach of the giants and other enemies of the gods.
+And sometimes he helps to swap Ethereum, Tezos and TON.
 
 ### Usage:
 
