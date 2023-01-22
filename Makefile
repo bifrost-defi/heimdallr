@@ -1,12 +1,12 @@
-AVA_PATH=./internal/avalanche
+EVM_PATH=./internal/evm
 
-ava.compile:
-	@solc @openzeppelin/=../lock-avax-contracts/node_modules/@openzeppelin/ \
-		--abi ../lock-avax-contracts/contracts/*.sol \
-		-o $(AVA_PATH)/abi \
+evm.compile:
+	@solc @openzeppelin/=../bifrost-solidity-contracts/node_modules/@openzeppelin/ \
+		--abi ../bifrost-solidity-contracts/contracts/*.sol \
+		-o $(EVM_PATH)/abi \
 		 --overwrite
 
-ava.gen:
+evm.gen:
 	@abigen --abi $(AVA_PATH)/abi/LockManager.abi --pkg=locker --out=$(AVA_PATH)/locker/locker.go
 
 build:

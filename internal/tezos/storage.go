@@ -18,7 +18,8 @@ type Storage struct {
 type Burning struct {
 	User        tezos.Address `json:"user"`
 	Amount      tezos.Z       `json:"amount"`
-	Destination string        `json:"destination"`
+	Destination string        `json:"destAddress"`
+	CoinID      int           `json:"destCoinId"`
 	Ts          time.Time     `json:"ts"`
 }
 

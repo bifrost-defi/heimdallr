@@ -7,18 +7,23 @@ import (
 )
 
 type Config struct {
-	Avalanche struct {
-		RPC        string `env:"AVALANCHE_RPC_URL"`
-		WS         string `env:"AVALANCHE_WS_URL"`
-		Contract   string `env:"AVALANCHE_CONTRACT"`
-		PrivateKey string `env:"AVALANCHE_PRIVATE_KEY"`
+	Ethereum struct {
+		RPC            string `env:"ETHEREUM_RPC_URL"`
+		WS             string `env:"ETHEREUM_WS_URL"`
+		BridgeContract string `env:"ETHEREUM__BRIDGE_CONTRACT"`
+		PrivateKey     string `env:"ETHEREUM_PRIVATE_KEY"`
 	}
 
 	Tezos struct {
-		URL           string `env:"TEZOS_URL"`
-		WAVAXContract string `env:"TEZOS_WAVAX_CONTRACT"`
-		WUSDCContract string `env:"TEZOS_WUSDC_CONTRACT"`
-		PrivateKey    string `env:"TEZOS_PRIVATE_KEY"`
+		URL            string `env:"TEZOS_URL"`
+		BridgeContract string `env:"TEZOS_BRIDGE_CONTRACT"`
+		PrivateKey     string `env:"TEZOS_PRIVATE_KEY"`
+	}
+
+	TON struct {
+		URL            string `env:"TON_URL"`
+		BridgeContract string `env:"TON_BRIDGE_CONTRACT"`
+		PrivateKey     string `env:"TON_PRIVATE_KEY"`
 	}
 }
 

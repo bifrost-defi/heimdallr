@@ -1,4 +1,4 @@
-package avalanche
+package evm
 
 import (
 	"context"
@@ -10,13 +10,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"heimdallr/internal/avalanche/locker"
+	"heimdallr/internal/evm/locker"
 )
 
-type Avalanche struct {
-	// LockManager contract address
+type EVM struct {
+	// Bridge contract address
 	contract common.Address
-	// LockManager contract instance
+	// Bridge contract instance
+	// TODO
 	locker *locker.Locker
 
 	privateKey string
@@ -25,8 +26,8 @@ type Avalanche struct {
 	ws  *ethclient.Client
 }
 
-func New(rpc *ethclient.Client, ws *ethclient.Client, contractAddr string, privateKey string) *Avalanche {
-	return &Avalanche{
+func New(rpc *ethclient.Client, ws *ethclient.Client, contractAddr string, privateKey string) *EVM {
+	return &EVM{
 		contract:   common.HexToAddress(contractAddr),
 		privateKey: privateKey,
 		rpc:        rpc,
@@ -34,7 +35,7 @@ func New(rpc *ethclient.Client, ws *ethclient.Client, contractAddr string, priva
 	}
 }
 
-func (a *Avalanche) init() error {
+func (a *EVM) init() error {
 	instance, err := locker.NewLocker(a.contract, a.ws)
 	if err != nil {
 		return fmt.Errorf("new locker: %w", err)
@@ -45,33 +46,26 @@ func (a *Avalanche) init() error {
 }
 
 // Subscribe creates subscription for the contract and returns Subscription instance.
-func (a *Avalanche) Subscribe(ctx context.Context) (*Subscription, error) {
+func (a *EVM) Subscribe(ctx context.Context) (*Subscription, error) {
 	if err := a.init(); err != nil {
 		return nil, fmt.Errorf("init: %w", err)
 	}
 
 	opts := &bind.WatchOpts{Context: ctx}
 
-	avaxEvents := make(chan *locker.LockerAVAXLocked)
-	avaxSub, err := a.locker.WatchAVAXLocked(opts, avaxEvents)
+	ethEvents := make(chan *locker.LockerAVAXLocked)
+	ethSub, err := a.locker.WatchAVAXLocked(opts, ethEvents)
 	if err != nil {
-		return nil, fmt.Errorf("watch avax: %w", err)
-	}
-
-	usdcEvents := make(chan *locker.LockerUSDCLocked)
-	usdcSub, err := a.locker.WatchUSDCLocked(opts, usdcEvents)
-	if err != nil {
-		return nil, fmt.Errorf("watch avax: %w", err)
+		return nil, fmt.Errorf("watch eth: %w", err)
 	}
 
 	s := newSubscription()
-	go s.loopAVAX(ctx, avaxSub, avaxEvents)
-	go s.loopUSDC(ctx, usdcSub, usdcEvents)
+	go s.loop(ctx, ethSub, ethEvents)
 
 	return s, nil
 }
 
-func (a *Avalanche) UnlockAVAX(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
+func (a *EVM) UnlockETH(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
 	opts, err := a.createTransactor(ctx)
 	if err != nil {
 		return "", nil, err
@@ -80,28 +74,13 @@ func (a *Avalanche) UnlockAVAX(ctx context.Context, user string, amount *big.Int
 	userAddress := common.HexToAddress(user)
 	tx, err := a.locker.UnlockAVAX(opts, userAddress, amount)
 	if err != nil {
-		return "", nil, fmt.Errorf("call unlockAVAX: %w", err)
+		return "", nil, fmt.Errorf("call unlock: %w", err)
 	}
 
 	return tx.Hash().Hex(), tx.Cost(), nil
 }
 
-func (a *Avalanche) UnlockUSDC(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
-	opts, err := a.createTransactor(ctx)
-	if err != nil {
-		return "", nil, err
-	}
-
-	userAddress := common.HexToAddress(user)
-	tx, err := a.locker.UnlockUSDC(opts, userAddress, amount)
-	if err != nil {
-		return "", nil, fmt.Errorf("call unlockAVAX: %w", err)
-	}
-
-	return tx.Hash().Hex(), tx.Cost(), nil
-}
-
-func (a *Avalanche) createTransactor(ctx context.Context) (*bind.TransactOpts, error) {
+func (a *EVM) createTransactor(ctx context.Context) (*bind.TransactOpts, error) {
 	privateKey, err := crypto.HexToECDSA(a.privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key: %w", err)
