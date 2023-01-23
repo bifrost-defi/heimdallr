@@ -104,24 +104,24 @@ func (t *Tezos) getBigMapLoader(contract *contract.Contract) bigmapLoader {
 			return nil, fmt.Errorf("invalid map")
 		}
 
-		burningsID, ok := s[name]
+		bigmapID, ok := s[name]
 		if !ok {
-			return nil, fmt.Errorf("burnings bigmap not found")
+			return nil, fmt.Errorf("%s bigmap not found", name)
 		}
 
-		info, err := t.client.GetBigmapInfo(ctx, burningsID.(int64), rpc.Head)
+		info, err := t.client.GetBigmapInfo(ctx, bigmapID.(int64), rpc.Head)
 		if err != nil {
 			return nil, fmt.Errorf("get bigmap info: %w", err)
 		}
 
-		keys, err := t.client.ListBigmapKeys(ctx, burningsID.(int64), rpc.Head)
+		keys, err := t.client.ListBigmapKeys(ctx, bigmapID.(int64), rpc.Head)
 		if err != nil {
 			return nil, fmt.Errorf("list bigmap values: %w", err)
 		}
 
 		bigmap := make(map[string]interface{}, len(keys))
 		for _, k := range keys {
-			v, err := t.client.GetBigmapValue(ctx, burningsID.(int64), k, rpc.Head)
+			v, err := t.client.GetBigmapValue(ctx, bigmapID.(int64), k, rpc.Head)
 			if err != nil {
 				return nil, fmt.Errorf("get bigmap value: %w", err)
 			}
