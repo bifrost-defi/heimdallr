@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/xssnick/tonutils-go/ton/wallet"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 
 	"blockwatch.cc/tzgo/rpc"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -87,8 +89,10 @@ func main() {
 		sugar.Fatal(err)
 	}
 	tonClient := tonUtils.NewAPIClient(pool)
+	seed := strings.Split(c.TON.WalletSeed, " ")
+	tonWallet, err := wallet.FromSeed(tonClient, seed, wallet.V3)
 
-	ton := ton.New(tonClient, c.TON.PrivateKey)
+	ton := ton.New(tonClient, tonWallet, c.TON.BridgeContract)
 
 	go runServer(ctx, sugar)
 
