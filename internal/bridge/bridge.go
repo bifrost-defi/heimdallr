@@ -8,11 +8,13 @@ import (
 	"go.uber.org/zap"
 	"heimdallr/internal/evm"
 	"heimdallr/internal/tezos"
+	"heimdallr/internal/ton"
 )
 
 type Bridge struct {
 	ethereum *evm.EVM
 	tezos    *tezos.Tezos
+	ton      *ton.TON
 
 	logger *zap.SugaredLogger
 }
@@ -24,10 +26,11 @@ type Event interface {
 	Destination() string
 }
 
-func New(ethereum *evm.EVM, tezos *tezos.Tezos, logger *zap.SugaredLogger) *Bridge {
+func New(ethereum *evm.EVM, tezos *tezos.Tezos, ton *ton.TON, logger *zap.SugaredLogger) *Bridge {
 	return &Bridge{
 		ethereum: ethereum,
 		tezos:    tezos,
+		ton:      ton,
 		logger:   logger,
 	}
 }
