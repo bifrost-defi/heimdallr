@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/xssnick/tonutils-go/ton/wallet"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/xssnick/tonutils-go/liteclient"
 	tonUtils "github.com/xssnick/tonutils-go/ton"
+	"github.com/xssnick/tonutils-go/ton/wallet"
 	"go.uber.org/zap"
 	"heimdallr/config"
 	"heimdallr/internal/bridge"
