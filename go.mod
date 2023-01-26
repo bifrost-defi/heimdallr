@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/chi v1.5.4
 	github.com/joho/godotenv v1.4.0
 	github.com/stretchr/testify v1.8.0
+	github.com/xssnick/tonutils-go v1.5.0
 	go.uber.org/zap v1.24.0
 )
 
@@ -30,6 +31,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect

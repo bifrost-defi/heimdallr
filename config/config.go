@@ -23,7 +23,8 @@ type Config struct {
 	TON struct {
 		URL            string `env:"TON_URL"`
 		BridgeContract string `env:"TON_BRIDGE_CONTRACT"`
-		PrivateKey     string `env:"TON_PRIVATE_KEY"`
+		ServerKey      string `env:"TON_SERVER_KEY"`
+		WalletSeed     string `env:"TON_WALLET_SEED"`
 	}
 }
 

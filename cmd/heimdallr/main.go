@@ -6,17 +6,22 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 
 	"blockwatch.cc/tzgo/rpc"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
+	"github.com/xssnick/tonutils-go/liteclient"
+	tonUtils "github.com/xssnick/tonutils-go/ton"
+	"github.com/xssnick/tonutils-go/ton/wallet"
 	"go.uber.org/zap"
 	"heimdallr/config"
 	"heimdallr/internal/bridge"
 	"heimdallr/internal/evm"
 	"heimdallr/internal/server"
 	"heimdallr/internal/tezos"
+	"heimdallr/internal/ton"
 )
 
 func main() {
@@ -44,6 +49,8 @@ func main() {
 		sugar.Debug("shutdown")
 	}()
 
+	// Connect to Ethereum
+
 	ethRPCClient, err := ethclient.Dial(c.Ethereum.RPC)
 	if err != nil {
 		err = fmt.Errorf("evm rpc dial: %w", err)
@@ -55,6 +62,8 @@ func main() {
 		sugar.Fatal(err)
 	}
 	eth := evm.New(ethRPCClient, ethWSClient, c.Ethereum.BridgeContract, c.Ethereum.PrivateKey)
+
+	// Connect to Tezos
 
 	tzsClient, err := rpc.NewClient(c.Tezos.URL, nil)
 	if err != nil {
@@ -71,9 +80,23 @@ func main() {
 		sugar.Fatal(err)
 	}
 
+	// Connect to TON
+
+	pool := liteclient.NewConnectionPool()
+	err = pool.AddConnection(ctx, c.TON.URL, c.TON.ServerKey)
+	if err != nil {
+		err = fmt.Errorf("add ton connection: %w", err)
+		sugar.Fatal(err)
+	}
+	tonClient := tonUtils.NewAPIClient(pool)
+	seed := strings.Split(c.TON.WalletSeed, " ")
+	tonWallet, err := wallet.FromSeed(tonClient, seed, wallet.V3)
+
+	ton := ton.New(tonClient, tonWallet, c.TON.BridgeContract)
+
 	go runServer(ctx, sugar)
 
-	b := bridge.New(eth, tzs, sugar)
+	b := bridge.New(eth, tzs, ton, sugar)
 	if err := b.Run(ctx); err != nil {
 		err = fmt.Errorf("run bridge: %w", err)
 		sugar.Fatal(err)
