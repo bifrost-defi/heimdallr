@@ -1,6 +1,8 @@
 package tezos
 
 import (
+	"blockwatch.cc/tzgo/contract"
+	"blockwatch.cc/tzgo/rpc"
 	"context"
 	"fmt"
 	"math/big"
@@ -12,7 +14,9 @@ import (
 type Subscription struct {
 	onTokenBurned chan BurnEvent
 
-	bridgeStorage *Storage
+	contract   *contract.Contract
+	client     *rpc.Client
+	blockLevel int64
 
 	errs chan error
 }
@@ -42,10 +46,10 @@ func (e BurnEvent) Destination() string {
 	return e.destination
 }
 
-func newSubscription(bridgeStorage *Storage) *Subscription {
+func newSubscription(contract *contract.Contract) *Subscription {
 	return &Subscription{
 		onTokenBurned: make(chan BurnEvent),
-		bridgeStorage: bridgeStorage,
+		contract:      contract,
 		errs:          make(chan error),
 	}
 }
@@ -67,23 +71,45 @@ func (s *Subscription) loop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-tick.C:
-			s.checkBurnings(ctx)
+			s.checkOperations(ctx)
 		}
 	}
 }
 
-func (s *Subscription) checkBurnings(ctx context.Context) {
-	burnings, err := s.bridgeStorage.UpdateBurnings(ctx)
+func (s *Subscription) checkOperations(ctx context.Context) {
+	b, err := s.client.GetBlock(ctx, rpc.Head)
 	if err != nil {
-		s.errs <- fmt.Errorf("update burnings: %w", err)
+		s.errs <- fmt.Errorf("get last block: %w", err)
+
+		return
 	}
 
-	for _, v := range burnings {
-		s.onTokenBurned <- BurnEvent{
-			user:        v.User,
-			amount:      v.Amount.Big(),
-			coinId:      v.CoinID,
-			destination: v.Destination,
+	for s.blockLevel <= b.GetLevel() {
+		ops, err := s.client.GetBlockOperationList(ctx, rpc.BlockLevel(s.blockLevel), 0)
+		if err != nil {
+			s.errs <- fmt.Errorf("get operations for block %d: %w", s.blockLevel, err)
+
+			return
+		}
+
+		for _, op := range ops {
+			for _, c := range op.Contents {
+				if c.Kind() == tezos.OpTypeTransaction {
+					go s.collectEvents(c.Meta().InternalResults)
+				}
+			}
+		}
+	}
+}
+
+func (s *Subscription) collectEvents(results []*rpc.InternalResult) {
+	collector := func(result *rpc.InternalResult) {
+		// TODO: parse result
+	}
+
+	for _, r := range results {
+		if r.Destination.Equal(s.contract.Address()) && r.Kind == tezos.OpTypeEvent {
+			go collector(r)
 		}
 	}
 }
