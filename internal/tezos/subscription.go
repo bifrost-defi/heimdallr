@@ -4,15 +4,16 @@ import (
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/rpc"
 	"context"
+	"encoding/json"
 	"fmt"
-	"math/big"
 	"time"
 
 	"blockwatch.cc/tzgo/tezos"
 )
 
 type Subscription struct {
-	onTokenBurned chan BurnEvent
+	onTokenBurned chan Event
+	onCoinsLocked chan Event
 
 	contract   *contract.Contract
 	client     *rpc.Client
@@ -23,38 +24,16 @@ type Subscription struct {
 
 const checkInterval = 3 * time.Second
 
-type BurnEvent struct {
-	user        tezos.Address
-	amount      *big.Int
-	coinId      int
-	destination string
-}
-
-func (e BurnEvent) User() string {
-	return e.user.String()
-}
-
-func (e BurnEvent) Amount() *big.Int {
-	return e.amount
-}
-
-func (e BurnEvent) CoinID() int {
-	return e.coinId
-}
-
-func (e BurnEvent) Destination() string {
-	return e.destination
-}
-
 func newSubscription(contract *contract.Contract) *Subscription {
 	return &Subscription{
-		onTokenBurned: make(chan BurnEvent),
+		onTokenBurned: make(chan Event),
+		onCoinsLocked: make(chan Event),
 		contract:      contract,
 		errs:          make(chan error),
 	}
 }
 
-func (s *Subscription) OnTokenBurned() <-chan BurnEvent {
+func (s *Subscription) OnTokenBurned() <-chan Event {
 	return s.onTokenBurned
 }
 
@@ -104,7 +83,31 @@ func (s *Subscription) checkOperations(ctx context.Context) {
 
 func (s *Subscription) collectEvents(results []*rpc.InternalResult) {
 	collector := func(result *rpc.InternalResult) {
-		// TODO: parse result
+		eventData := result.Payload.Args.Last().Bytes
+
+		var event MichelsonEvent
+		if err := json.Unmarshal(eventData, &event); err != nil {
+			s.errs <- fmt.Errorf("unmarshal event: %w", err)
+
+			return
+		}
+
+		switch result.Tag {
+		case "lock":
+			s.onCoinsLocked <- Event{
+				user:        event.User,
+				amount:      event.Amount.Big(),
+				coinId:      event.CoinID,
+				destination: event.Destination,
+			}
+		case "burn":
+			s.onTokenBurned <- Event{
+				user:        event.User,
+				amount:      event.Amount.Big(),
+				coinId:      event.CoinID,
+				destination: event.Destination,
+			}
+		}
 	}
 
 	for _, r := range results {

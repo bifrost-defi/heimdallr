@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"blockwatch.cc/tzgo/contract"
-	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/signer"
 	"blockwatch.cc/tzgo/tezos"
@@ -45,9 +44,7 @@ func (t *Tezos) LoadContracts(ctx context.Context, bridgeContractAddr string) er
 
 // Subscribe starts listening to events and returns Subscription.
 func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
-	bridgeStorage := newStorage(t.getBigMapLoader(t.bridgeContract))
-
-	s := newSubscription(bridgeStorage)
+	s := newSubscription(t.bridgeContract)
 	go s.loop(ctx)
 
 	return s, nil
@@ -82,61 +79,6 @@ func (t *Tezos) MintToken(ctx context.Context, destination string, coinId int, a
 	}
 
 	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
-}
-
-func (t *Tezos) getBigMapLoader(contract *contract.Contract) bigmapLoader {
-	return func(ctx context.Context, name string) (map[string]interface{}, error) {
-		script := contract.Script()
-		storage, err := t.client.GetContractStorage(ctx, contract.Address(), rpc.Head)
-		if err != nil {
-			return nil, fmt.Errorf("get contract storage: %w", err)
-		}
-
-		val := micheline.NewValue(script.StorageType(), storage)
-
-		m, err := val.Map()
-		if err != nil {
-			return nil, fmt.Errorf("get map: %w", err)
-		}
-
-		s, ok := m.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("invalid map")
-		}
-
-		bigmapID, ok := s[name]
-		if !ok {
-			return nil, fmt.Errorf("%s bigmap not found", name)
-		}
-
-		info, err := t.client.GetBigmapInfo(ctx, bigmapID.(int64), rpc.Head)
-		if err != nil {
-			return nil, fmt.Errorf("get bigmap info: %w", err)
-		}
-
-		keys, err := t.client.ListBigmapKeys(ctx, bigmapID.(int64), rpc.Head)
-		if err != nil {
-			return nil, fmt.Errorf("list bigmap values: %w", err)
-		}
-
-		bigmap := make(map[string]interface{}, len(keys))
-		for _, k := range keys {
-			v, err := t.client.GetBigmapValue(ctx, bigmapID.(int64), k, rpc.Head)
-			if err != nil {
-				return nil, fmt.Errorf("get bigmap value: %w", err)
-			}
-
-			val := micheline.NewValue(micheline.NewType(info.ValueType), v)
-			m, err := val.Map()
-			if err != nil {
-				return nil, fmt.Errorf("map: %w", err)
-			}
-
-			bigmap[k.String()] = m
-		}
-
-		return bigmap, nil
-	}
 }
 
 func (t *Tezos) loadContract(ctx context.Context, addr string, resolve bool) (*contract.Contract, error) {
