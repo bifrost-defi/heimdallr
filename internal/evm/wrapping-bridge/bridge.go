@@ -30,7 +30,7 @@ var (
 
 // WrappingBridgeMetaData contains all meta data concerning the WrappingBridge contract.
 var WrappingBridgeMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"_oracles\",\"type\":\"address[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"destAddress\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"int256\",\"name\":\"destChain\",\"type\":\"int256\"}],\"name\":\"Lock\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"destAddress\",\"type\":\"string\"}],\"name\":\"LockERC20\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Unlock\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"UnlockERC20\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_destAddress\",\"type\":\"string\"},{\"internalType\":\"int256\",\"name\":\"_destChain\",\"type\":\"int256\"}],\"name\":\"lock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_destAddress\",\"type\":\"string\"}],\"name\":\"lockERC20\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"addresspayable\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"unlock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"unlockERC20\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"_oracles\",\"type\":\"address[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"destAddress\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"int256\",\"name\":\"destChain\",\"type\":\"int256\"}],\"name\":\"Lock\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"destAddress\",\"type\":\"string\"}],\"name\":\"LockERC20\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"CoinsUnlock\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"UnlockERC20\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_destAddress\",\"type\":\"string\"},{\"internalType\":\"int256\",\"name\":\"_destChain\",\"type\":\"int256\"}],\"name\":\"lock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_destAddress\",\"type\":\"string\"}],\"name\":\"lockERC20\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"addresspayable\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"unlock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"unlockERC20\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // WrappingBridgeABI is the input ABI used to generate the binding from.
@@ -791,7 +791,7 @@ func (_WrappingBridge *WrappingBridgeFilterer) ParseOwnershipTransferred(log typ
 	return event, nil
 }
 
-// WrappingBridgeUnlockIterator is returned from FilterUnlock and is used to iterate over the raw logs and unpacked data for Unlock events raised by the WrappingBridge contract.
+// WrappingBridgeUnlockIterator is returned from FilterUnlock and is used to iterate over the raw logs and unpacked data for CoinsUnlock events raised by the WrappingBridge contract.
 type WrappingBridgeUnlockIterator struct {
 	Event *WrappingBridgeUnlock // Event containing the contract specifics and raw log
 
@@ -858,7 +858,7 @@ func (it *WrappingBridgeUnlockIterator) Close() error {
 	return nil
 }
 
-// WrappingBridgeUnlock represents a Unlock event raised by the WrappingBridge contract.
+// WrappingBridgeUnlock represents a CoinsUnlock event raised by the WrappingBridge contract.
 type WrappingBridgeUnlock struct {
 	To    common.Address
 	Value *big.Int
@@ -867,7 +867,7 @@ type WrappingBridgeUnlock struct {
 
 // FilterUnlock is a free log retrieval operation binding the contract event 0x6381d9813cabeb57471b5a7e05078e64845ccdb563146a6911d536f24ce960f1.
 //
-// Solidity: event Unlock(address indexed to, uint256 value)
+// Solidity: event CoinsUnlock(address indexed to, uint256 value)
 func (_WrappingBridge *WrappingBridgeFilterer) FilterUnlock(opts *bind.FilterOpts, to []common.Address) (*WrappingBridgeUnlockIterator, error) {
 
 	var toRule []interface{}
@@ -875,16 +875,16 @@ func (_WrappingBridge *WrappingBridgeFilterer) FilterUnlock(opts *bind.FilterOpt
 		toRule = append(toRule, toItem)
 	}
 
-	logs, sub, err := _WrappingBridge.contract.FilterLogs(opts, "Unlock", toRule)
+	logs, sub, err := _WrappingBridge.contract.FilterLogs(opts, "CoinsUnlock", toRule)
 	if err != nil {
 		return nil, err
 	}
-	return &WrappingBridgeUnlockIterator{contract: _WrappingBridge.contract, event: "Unlock", logs: logs, sub: sub}, nil
+	return &WrappingBridgeUnlockIterator{contract: _WrappingBridge.contract, event: "CoinsUnlock", logs: logs, sub: sub}, nil
 }
 
 // WatchUnlock is a free log subscription operation binding the contract event 0x6381d9813cabeb57471b5a7e05078e64845ccdb563146a6911d536f24ce960f1.
 //
-// Solidity: event Unlock(address indexed to, uint256 value)
+// Solidity: event CoinsUnlock(address indexed to, uint256 value)
 func (_WrappingBridge *WrappingBridgeFilterer) WatchUnlock(opts *bind.WatchOpts, sink chan<- *WrappingBridgeUnlock, to []common.Address) (event.Subscription, error) {
 
 	var toRule []interface{}
@@ -892,7 +892,7 @@ func (_WrappingBridge *WrappingBridgeFilterer) WatchUnlock(opts *bind.WatchOpts,
 		toRule = append(toRule, toItem)
 	}
 
-	logs, sub, err := _WrappingBridge.contract.WatchLogs(opts, "Unlock", toRule)
+	logs, sub, err := _WrappingBridge.contract.WatchLogs(opts, "CoinsUnlock", toRule)
 	if err != nil {
 		return nil, err
 	}
@@ -903,7 +903,7 @@ func (_WrappingBridge *WrappingBridgeFilterer) WatchUnlock(opts *bind.WatchOpts,
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
 				event := new(WrappingBridgeUnlock)
-				if err := _WrappingBridge.contract.UnpackLog(event, "Unlock", log); err != nil {
+				if err := _WrappingBridge.contract.UnpackLog(event, "CoinsUnlock", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -926,10 +926,10 @@ func (_WrappingBridge *WrappingBridgeFilterer) WatchUnlock(opts *bind.WatchOpts,
 
 // ParseUnlock is a log parse operation binding the contract event 0x6381d9813cabeb57471b5a7e05078e64845ccdb563146a6911d536f24ce960f1.
 //
-// Solidity: event Unlock(address indexed to, uint256 value)
+// Solidity: event CoinsUnlock(address indexed to, uint256 value)
 func (_WrappingBridge *WrappingBridgeFilterer) ParseUnlock(log types.Log) (*WrappingBridgeUnlock, error) {
 	event := new(WrappingBridgeUnlock)
-	if err := _WrappingBridge.contract.UnpackLog(event, "Unlock", log); err != nil {
+	if err := _WrappingBridge.contract.UnpackLog(event, "CoinsUnlock", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
