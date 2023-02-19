@@ -61,9 +61,9 @@ func (t *Tezos) MintToken(ctx context.Context, destination string, coinId int, a
 		return "", nil, fmt.Errorf("parse destination address: %w", err)
 	}
 
-	mint := TokenMint{
-		To:     address,
+	tm := TokenMint{
 		CoinID: coinId,
+		To:     address,
 		Value:  tezos.Z(*amount),
 	}
 	opts := &rpc.CallOptions{
@@ -71,7 +71,37 @@ func (t *Tezos) MintToken(ctx context.Context, destination string, coinId int, a
 		TTL:           120,
 		Signer:        signer.NewFromKey(pk),
 	}
-	args := &TokenMintArgs{Mint: mint}
+	args := &TokenMintArgs{TokenMint: tm}
+
+	tx, err := t.bridgeContract.Call(ctx, args, opts)
+	if err != nil {
+		return "", nil, fmt.Errorf("call contract: %w", err)
+	}
+
+	return tx.Op.Hash.String(), big.NewInt(tx.Costs()[0].Fee), nil
+}
+
+func (t *Tezos) UnlockCoins(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
+	pk, err := tezos.ParsePrivateKey(t.privateKey)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse private key: %w", err)
+	}
+
+	address, err := tezos.ParseAddress(user)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse destination address: %w", err)
+	}
+
+	cu := CoinsUnlock{
+		To:    address,
+		Value: tezos.Z(*amount),
+	}
+	opts := &rpc.CallOptions{
+		Confirmations: confirmations,
+		TTL:           120,
+		Signer:        signer.NewFromKey(pk),
+	}
+	args := &CoinsUnlockArgs{CoinsUnlock: cu}
 
 	tx, err := t.bridgeContract.Call(ctx, args, opts)
 	if err != nil {
