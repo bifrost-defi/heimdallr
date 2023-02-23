@@ -3,6 +3,7 @@ package ton
 import (
 	"context"
 	"fmt"
+	"heimdallr/internal/chain"
 	"math/big"
 
 	"github.com/xssnick/tonutils-go/address"
@@ -17,6 +18,8 @@ type TON struct {
 	wallet   *wallet.Wallet
 	contract *address.Address
 }
+
+var _ chain.Chain = (*TON)(nil)
 
 func New(client *ton.APIClient, wallet *wallet.Wallet, contractAddr string) *TON {
 	return &TON{
@@ -33,10 +36,10 @@ func (t *TON) Subscribe(ctx context.Context) (*Subscription, error) {
 	return s, nil
 }
 
-func (t *TON) Unlock(ctx context.Context, user string, amount *big.Int) error {
-	destination, err := address.ParseAddr(user)
+func (t *TON) UnlockCoins(ctx context.Context, account string, amount *big.Int) (string, *big.Int, error) {
+	destination, err := address.ParseAddr(account)
 	if err != nil {
-		return fmt.Errorf("parse destination: %w", err)
+		return "", nil, fmt.Errorf("parse destination: %w", err)
 	}
 
 	body := cell.BeginCell().
@@ -55,8 +58,14 @@ func (t *TON) Unlock(ctx context.Context, user string, amount *big.Int) error {
 		},
 	}, true)
 	if err != nil {
-		return fmt.Errorf("send message: %w", err)
+		return "", nil, fmt.Errorf("send message: %w", err)
 	}
 
-	return nil
+	// TODO: calculate hash and fee
+	return "", big.NewInt(0), nil
+}
+
+func (t *TON) MintToken(ctx context.Context, destination string, coinId int, amount *big.Int) (string, *big.Int, error) {
+	//TODO implement me
+	panic("implement me")
 }

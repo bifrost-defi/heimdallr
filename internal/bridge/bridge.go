@@ -3,18 +3,17 @@ package bridge
 import (
 	"context"
 	"fmt"
+	"heimdallr/internal/chain"
+	"heimdallr/internal/chain/evm"
+	"heimdallr/internal/chain/tezos"
+	"heimdallr/internal/chain/ton"
 	"math/big"
 
 	"go.uber.org/zap"
-	"heimdallr/internal/evm"
-	"heimdallr/internal/tezos"
-	"heimdallr/internal/ton"
 )
 
 type Bridge struct {
-	ethereum *evm.EVM
-	tezos    *tezos.Tezos
-	ton      *ton.TON
+	chains map[ChainID]chain.Chain
 
 	logger *zap.SugaredLogger
 }
@@ -27,32 +26,41 @@ type Event interface {
 }
 
 func New(ethereum *evm.EVM, tezos *tezos.Tezos, ton *ton.TON, logger *zap.SugaredLogger) *Bridge {
+	chains := map[ChainID]chain.Chain{
+		EthereumID: ethereum,
+		TezosID:    tezos,
+		TonID:      ton,
+	}
+
 	return &Bridge{
-		ethereum: ethereum,
-		tezos:    tezos,
-		ton:      ton,
-		logger:   logger,
+		chains: chains,
+		logger: logger,
 	}
 }
 
 func (b *Bridge) Run(ctx context.Context) error {
-	ethSub, err := b.ethereum.Subscribe(ctx)
+	ethSub, err := b.chains[EthereumID].(*evm.EVM).Subscribe(ctx)
 	if err != nil {
 		return fmt.Errorf("subscribe evm: %w", err)
 	}
 
-	tzsSub, err := b.tezos.Subscribe(ctx)
+	tzsSub, err := b.chains[TezosID].(*tezos.Tezos).Subscribe(ctx)
 	if err != nil {
 		return fmt.Errorf("subscribe tezos: %w", err)
 	}
 
+	tonSub, err := b.chains[TonID].(*ton.TON).Subscribe(ctx)
+	if err != nil {
+		return fmt.Errorf("subscribe ton: %w", err)
+	}
+
 	b.logger.Info("Heimdallr is watching")
-	b.loop(ctx, ethSub, tzsSub)
+	b.loop(ctx, ethSub, tzsSub, tonSub)
 
 	return nil
 }
 
-func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tezos.Subscription) {
+func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tezos.Subscription, sub *ton.Subscription) {
 	atomic := NewAtomic(
 		WithChecker(b.checkOperation),
 	)
@@ -67,15 +75,11 @@ func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tez
 		case event := <-ethSub.OnETHLocked():
 			swap := atomic.NewOperation(
 				WithName("TODO"),
-				OnPerform(b.mintToken),
-				OnRollback(b.unlockETH),
 			)
 			go swap.Run(ctx, event)
 		case event := <-tzsSub.OnTokenBurned():
 			swap := atomic.NewOperation(
 				WithName("TODO"),
-				OnPerform(b.unlockETH),
-				OnRollback(b.mintToken),
 			)
 			go swap.Run(ctx, event)
 
@@ -84,46 +88,10 @@ func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tez
 			b.logger.Errorf("evm subscribtion error: %s", err)
 		case err := <-tzsSub.Err():
 			b.logger.Errorf("tezos subscribtion error: %s", err)
+		case err := <-tzsSub.Err():
+			b.logger.Errorf("ton subscribtion error: %s", err)
 		}
 	}
-}
-
-func (b *Bridge) mintToken(ctx context.Context, event Event) bool {
-	hash, fee, err := b.tezos.MintToken(ctx, event.Destination(), event.CoinID(), event.Amount())
-	if err != nil {
-		b.logger.Errorf("mint token: %s", err)
-
-		return false
-	}
-
-	b.logger.With(
-		zap.String("user", event.User()),
-		zap.Int64("amount", event.Amount().Int64()),
-		zap.String("destination", event.Destination()),
-		zap.String("tx_hash", hash),
-		zap.Int64("fee", fee.Int64()),
-	).Info("token minted")
-
-	return true
-}
-
-func (b *Bridge) unlockETH(ctx context.Context, event Event) bool {
-	hash, fee, err := b.ethereum.UnlockETH(ctx, event.Destination(), event.Amount())
-	if err != nil {
-		b.logger.Errorf("unlock eth: %s", err)
-
-		return false
-	}
-
-	b.logger.With(
-		zap.String("user", event.User()),
-		zap.Int64("amount", event.Amount().Int64()),
-		zap.String("destination", event.Destination()),
-		zap.String("tx_hash", hash),
-		zap.Int64("fee", fee.Int64()),
-	).Info("eth unlocked")
-
-	return true
 }
 
 func (b *Bridge) checkOperation(op Checker, event Event) {

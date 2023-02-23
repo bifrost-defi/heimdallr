@@ -2,11 +2,11 @@ package evm
 
 import (
 	"context"
+	"heimdallr/internal/chain/evm/wrapping-bridge"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	wrappingBridge "heimdallr/internal/evm/wrapping-bridge"
 )
 
 type Subscription struct {

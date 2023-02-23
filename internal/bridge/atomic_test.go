@@ -3,11 +3,11 @@ package bridge
 import (
 	"context"
 	"errors"
+	"heimdallr/internal/chain/evm"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"heimdallr/internal/evm"
 )
 
 type AtomicSuite struct {

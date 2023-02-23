@@ -3,6 +3,7 @@ package tezos
 import (
 	"context"
 	"fmt"
+	"heimdallr/internal/chain"
 	"math/big"
 
 	"blockwatch.cc/tzgo/contract"
@@ -17,6 +18,8 @@ type Tezos struct {
 	privateKey string
 	client     *rpc.Client
 }
+
+var _ chain.Chain = (*Tezos)(nil)
 
 const confirmations = 5
 
