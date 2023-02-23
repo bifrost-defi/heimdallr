@@ -6,14 +6,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"heimdallr/internal/chain"
 	"time"
 
 	"blockwatch.cc/tzgo/tezos"
 )
 
 type Subscription struct {
-	onTokenBurned chan Event
-	onCoinsLocked chan Event
+	onTokenBurned chan chain.Event
+	onCoinsLocked chan chain.Event
 
 	contract   *contract.Contract
 	client     *rpc.Client
@@ -26,15 +27,19 @@ const checkInterval = 3 * time.Second
 
 func newSubscription(contract *contract.Contract) *Subscription {
 	return &Subscription{
-		onTokenBurned: make(chan Event),
-		onCoinsLocked: make(chan Event),
+		onTokenBurned: make(chan chain.Event),
+		onCoinsLocked: make(chan chain.Event),
 		contract:      contract,
 		errs:          make(chan error),
 	}
 }
 
-func (s *Subscription) OnTokenBurned() <-chan Event {
+func (s *Subscription) OnTokenBurned() <-chan chain.Event {
 	return s.onTokenBurned
+}
+
+func (s *Subscription) OnCoinsLocked() <-chan chain.Event {
+	return s.onCoinsLocked
 }
 
 func (s *Subscription) Err() <-chan error {
@@ -94,19 +99,19 @@ func (s *Subscription) collectEvents(results []*rpc.InternalResult) {
 
 		switch result.Tag {
 		case "lock":
-			s.onCoinsLocked <- Event{
-				user:        event.User,
-				amount:      event.Amount.Big(),
-				coinId:      event.CoinID,
-				destination: event.Destination,
-			}
+			s.onCoinsLocked <- chain.NewEvent(
+				event.User.String(),
+				event.Amount.Big(),
+				event.CoinID,
+				event.Destination,
+			)
 		case "burn":
-			s.onTokenBurned <- Event{
-				user:        event.User,
-				amount:      event.Amount.Big(),
-				coinId:      event.CoinID,
-				destination: event.Destination,
-			}
+			s.onTokenBurned <- chain.NewEvent(
+				event.User.String(),
+				event.Amount.Big(),
+				event.CoinID,
+				event.Destination,
+			)
 		}
 	}
 

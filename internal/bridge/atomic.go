@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"heimdallr/internal/chain"
 )
 
 // Atomic represents wrapper for functions call
@@ -36,7 +37,7 @@ type Operation struct {
 }
 
 type (
-	Fn func(ctx context.Context, event Event) (ok bool)
+	Fn func(ctx context.Context, event chain.Event) (ok bool)
 
 	// Checker exposes methods for operation state checking.
 	Checker interface {
@@ -44,7 +45,7 @@ type (
 		Rollback() <-chan struct{}
 		Fail() <-chan error
 	}
-	CheckerFn func(op Checker, event Event)
+	CheckerFn func(op Checker, event chain.Event)
 )
 
 type Option interface {
@@ -107,7 +108,7 @@ func (a *Atomic) NewOperation(options ...Option) *Operation {
 }
 
 // Run runs operation and controls its depending on options.
-func (o *Operation) Run(ctx context.Context, event Event) {
+func (o *Operation) Run(ctx context.Context, event chain.Event) {
 	if o.checkerFn != nil {
 		go o.checkerFn(o, event)
 	}

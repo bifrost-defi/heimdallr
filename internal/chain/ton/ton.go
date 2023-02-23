@@ -29,7 +29,7 @@ func New(client *ton.APIClient, wallet *wallet.Wallet, contractAddr string) *TON
 	}
 }
 
-func (t *TON) Subscribe(ctx context.Context) (*Subscription, error) {
+func (t *TON) Subscribe(ctx context.Context) (chain.Subscription, error) {
 	s := newSubscription(t.client, t.contract)
 	go s.loop(ctx)
 
@@ -65,7 +65,32 @@ func (t *TON) UnlockCoins(ctx context.Context, account string, amount *big.Int) 
 	return "", big.NewInt(0), nil
 }
 
-func (t *TON) MintToken(ctx context.Context, destination string, coinId int, amount *big.Int) (string, *big.Int, error) {
-	//TODO implement me
-	panic("implement me")
+func (t *TON) MintToken(ctx context.Context, to string, coinId int, amount *big.Int) (string, *big.Int, error) {
+	destination, err := address.ParseAddr(to)
+	if err != nil {
+		return "", nil, fmt.Errorf("parse destination: %w", err)
+	}
+
+	body := cell.BeginCell().
+		MustStoreUInt(MintOpCode, 32). // op code
+		MustStoreUInt(0, 64).          // query id
+		MustStoreAddr(destination).
+		MustStoreUInt(uint64(coinId), 32).
+		MustStoreCoins(amount.Uint64()).
+		EndCell()
+
+	err = t.wallet.Send(ctx, &wallet.Message{
+		Mode: 1, // pay fees separately (from balance, not from amount)
+		InternalMessage: &tlb.InternalMessage{
+			DstAddr: t.contract,
+			Amount:  tlb.MustFromTON("0.03"),
+			Body:    body,
+		},
+	}, true)
+	if err != nil {
+		return "", nil, fmt.Errorf("send message: %w", err)
+	}
+
+	// TODO: calculate hash and fee
+	return "", big.NewInt(0), nil
 }

@@ -46,22 +46,22 @@ func (t *Tezos) LoadContracts(ctx context.Context, bridgeContractAddr string) er
 }
 
 // Subscribe starts listening to events and returns Subscription.
-func (t *Tezos) Subscribe(ctx context.Context) (*Subscription, error) {
+func (t *Tezos) Subscribe(ctx context.Context) (chain.Subscription, error) {
 	s := newSubscription(t.bridgeContract)
 	go s.loop(ctx)
 
 	return s, nil
 }
 
-func (t *Tezos) MintToken(ctx context.Context, destination string, coinId int, amount *big.Int) (string, *big.Int, error) {
+func (t *Tezos) MintToken(ctx context.Context, to string, coinId int, amount *big.Int) (string, *big.Int, error) {
 	pk, err := tezos.ParsePrivateKey(t.privateKey)
 	if err != nil {
 		return "", nil, fmt.Errorf("parse private key: %w", err)
 	}
 
-	address, err := tezos.ParseAddress(destination)
+	address, err := tezos.ParseAddress(to)
 	if err != nil {
-		return "", nil, fmt.Errorf("parse destination address: %w", err)
+		return "", nil, fmt.Errorf("parse address: %w", err)
 	}
 
 	tm := TokenMint{

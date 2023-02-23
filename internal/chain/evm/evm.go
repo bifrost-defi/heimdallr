@@ -48,7 +48,7 @@ func (a *EVM) init() error {
 }
 
 // Subscribe creates subscription for the contract and returns Subscription instance.
-func (a *EVM) Subscribe(ctx context.Context) (*Subscription, error) {
+func (a *EVM) Subscribe(ctx context.Context) (chain.Subscription, error) {
 	if err := a.init(); err != nil {
 		return nil, fmt.Errorf("init: %w", err)
 	}
@@ -82,7 +82,7 @@ func (a *EVM) UnlockCoins(ctx context.Context, user string, amount *big.Int) (st
 	return tx.Hash().Hex(), tx.Cost(), nil
 }
 
-func (a *EVM) MintToken(ctx context.Context, destination string, coinId int, amount *big.Int) (string, *big.Int, error) {
+func (a *EVM) MintToken(ctx context.Context, to string, coinId int, amount *big.Int) (string, *big.Int, error) {
 	//TODO implement me
 	panic("implement me")
 }

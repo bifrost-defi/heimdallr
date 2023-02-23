@@ -3,6 +3,7 @@ package ton
 import (
 	"context"
 	"fmt"
+	"heimdallr/internal/chain"
 	"math/big"
 	"time"
 
@@ -15,8 +16,10 @@ import (
 type Subscription struct {
 	client   *ton.APIClient
 	contract *address.Address
-	onLocked chan LockEvent
-	errs     chan error
+
+	onTokenBurned chan chain.Event
+	onCoinsLocked chan chain.Event
+	errs          chan error
 }
 
 const (
@@ -26,40 +29,22 @@ const (
 	LockEventID = 101
 )
 
-type LockEvent struct {
-	user        *address.Address
-	amount      *big.Int
-	coinId      int
-	destination string
-}
-
-func (e LockEvent) User() string {
-	return e.user.String()
-}
-
-func (e LockEvent) Amount() *big.Int {
-	return e.amount
-}
-
-func (e LockEvent) CoinID() int {
-	return e.coinId
-}
-
-func (e LockEvent) Destination() string {
-	return e.destination
-}
-
 func newSubscription(client *ton.APIClient, contract *address.Address) *Subscription {
 	return &Subscription{
-		client:   client,
-		contract: contract,
-		onLocked: make(chan LockEvent),
-		errs:     make(chan error),
+		client:        client,
+		contract:      contract,
+		onTokenBurned: make(chan chain.Event),
+		onCoinsLocked: make(chan chain.Event),
+		errs:          make(chan error),
 	}
 }
 
-func (s *Subscription) OnLocked() <-chan LockEvent {
-	return s.onLocked
+func (s *Subscription) OnTokenBurned() <-chan chain.Event {
+	return s.onTokenBurned
+}
+
+func (s *Subscription) OnCoinsLocked() <-chan chain.Event {
+	return s.onCoinsLocked
 }
 
 func (s *Subscription) Err() <-chan error {
@@ -122,15 +107,25 @@ func (s *Subscription) processMessage(msg *tlb.ExternalMessageOut) {
 
 	cs := msg.Payload().BeginParse()
 	destAddress := utils.BigIntToHex(cs.MustLoadBigUInt(160))
-	destCoinID := cs.MustLoadInt(32)
+	coinID := cs.MustLoadInt(32)
 	fromAddressHash := cs.MustLoadBigUInt(256)
 	fromAddress := address.NewAddress(0, byte(msg.SrcAddr.Workchain()), fromAddressHash.Bytes())
 	amount := cs.MustLoadBigCoins()
 
-	s.onLocked <- LockEvent{
-		user:        fromAddress,
-		amount:      amount,
-		coinId:      int(destCoinID),
-		destination: destAddress,
+	switch eventId {
+	case LockTonEventID:
+		s.onCoinsLocked <- chain.NewEvent(
+			fromAddress.String(),
+			amount,
+			int(coinID),
+			destAddress,
+		)
+	case BurnJettonEventID:
+		s.onCoinsLocked <- chain.NewEvent(
+			fromAddress.String(),
+			amount,
+			int(coinID),
+			destAddress,
+		)
 	}
 }

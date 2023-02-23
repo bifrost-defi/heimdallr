@@ -3,26 +3,17 @@ package bridge
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"heimdallr/internal/chain"
 	"heimdallr/internal/chain/evm"
 	"heimdallr/internal/chain/tezos"
 	"heimdallr/internal/chain/ton"
-	"math/big"
-
-	"go.uber.org/zap"
 )
 
 type Bridge struct {
 	chains map[ChainID]chain.Chain
 
 	logger *zap.SugaredLogger
-}
-
-type Event interface {
-	User() string
-	Amount() *big.Int
-	CoinID() int
-	Destination() string
 }
 
 func New(ethereum *evm.EVM, tezos *tezos.Tezos, ton *ton.TON, logger *zap.SugaredLogger) *Bridge {
@@ -60,7 +51,7 @@ func (b *Bridge) Run(ctx context.Context) error {
 	return nil
 }
 
-func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tezos.Subscription, sub *ton.Subscription) {
+func (b *Bridge) loop(ctx context.Context, ethSub chain.Subscription, tzsSub chain.Subscription, tonSub chain.Subscription) {
 	atomic := NewAtomic(
 		WithChecker(b.checkOperation),
 	)
@@ -72,7 +63,7 @@ func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tez
 			return
 
 		// Handle events from chains and call another chain
-		case event := <-ethSub.OnETHLocked():
+		case event := <-ethSub.OnCoinsLocked():
 			swap := atomic.NewOperation(
 				WithName("TODO"),
 			)
@@ -94,7 +85,7 @@ func (b *Bridge) loop(ctx context.Context, ethSub *evm.Subscription, tzsSub *tez
 	}
 }
 
-func (b *Bridge) checkOperation(op Checker, event Event) {
+func (b *Bridge) checkOperation(op Checker, event chain.Event) {
 	select {
 	case <-op.Complete():
 		b.logger.With(
