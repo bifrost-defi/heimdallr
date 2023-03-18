@@ -63,7 +63,27 @@ func (b *Bridge) loop(ctx context.Context, ethSub chain.Subscription, tzsSub cha
 			return
 
 		// Handle events from chains and call another chain
+		case event := <-tonSub.OnCoinsLocked():
+			swap := atomic.NewOperation(
+				WithName("TODO"),
+			)
+			go swap.Run(ctx, event)
+		case event := <-tonSub.OnTokenBurned():
+			swap := atomic.NewOperation(
+				WithName("TODO"),
+			)
+			go swap.Run(ctx, event)
 		case event := <-ethSub.OnCoinsLocked():
+			swap := atomic.NewOperation(
+				WithName("TODO"),
+			)
+			go swap.Run(ctx, event)
+		case event := <-ethSub.OnTokenBurned():
+			swap := atomic.NewOperation(
+				WithName("TODO"),
+			)
+			go swap.Run(ctx, event)
+		case event := <-tzsSub.OnCoinsLocked():
 			swap := atomic.NewOperation(
 				WithName("TODO"),
 			)
