@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"heimdallr/internal/evm"
+	"heimdallr/internal/chain"
 )
 
 type AtomicSuite struct {
@@ -20,10 +20,10 @@ func (s *AtomicSuite) SetupTest() {
 }
 
 func (s *AtomicSuite) TestFailedRollback() {
-	f := func(_ context.Context, _ Event) bool {
+	f := func(_ context.Context, _ chain.Event) bool {
 		return false
 	}
-	rf := func(_ context.Context, _ Event) bool {
+	rf := func(_ context.Context, _ chain.Event) bool {
 		return false
 	}
 
@@ -31,7 +31,7 @@ func (s *AtomicSuite) TestFailedRollback() {
 		OnPerform(f),
 		OnRollback(rf),
 	)
-	go op.Run(nil, evm.LockEvent{})
+	go op.Run(nil, chain.Event{})
 
 	require.Equal(s.T(), true, errors.Is(<-op.Fail(), ErrRollbackFailed))
 }

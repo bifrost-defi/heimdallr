@@ -18,10 +18,10 @@ import (
 	"go.uber.org/zap"
 	"heimdallr/config"
 	"heimdallr/internal/bridge"
-	"heimdallr/internal/evm"
+	"heimdallr/internal/chain/evm"
+	"heimdallr/internal/chain/tezos"
+	"heimdallr/internal/chain/ton"
 	"heimdallr/internal/server"
-	"heimdallr/internal/tezos"
-	"heimdallr/internal/ton"
 )
 
 func main() {

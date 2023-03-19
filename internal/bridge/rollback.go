@@ -1,38 +1,16 @@
 package bridge
 
-import "math/big"
+import (
+	"heimdallr/internal/chain"
+)
 
-type RollbackEvent struct {
-	user        string
-	amount      *big.Int
-	coinID      int
-	destination string
-}
-
-var _ Event = (*RollbackEvent)(nil)
-
-func (e RollbackEvent) User() string {
-	return e.user
-}
-
-func (e RollbackEvent) Amount() *big.Int {
-	return e.amount
-}
-
-func (e RollbackEvent) CoinID() int {
-	return e.coinID
-}
-
-func (e RollbackEvent) Destination() string {
-	return e.destination
-}
-
-func rollbackEvent(event Event) RollbackEvent {
+func rollbackEvent(event chain.Event) chain.Event {
 	// Swap user and destination because event for rolling back
 	// must be mirrored to use it as an event from another blockchain.
-	return RollbackEvent{
-		user:        event.Destination(),
-		amount:      event.Amount(),
-		destination: event.User(),
-	}
+	return chain.NewEvent(
+		event.Destination(),
+		event.Amount(),
+		event.CoinID(),
+		event.User(),
+	)
 }

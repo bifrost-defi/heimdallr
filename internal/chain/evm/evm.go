@@ -10,7 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"heimdallr/internal/evm/wrapping-bridge"
+	"heimdallr/internal/chain"
+	"heimdallr/internal/chain/evm/wrapping-bridge"
 )
 
 type EVM struct {
@@ -24,6 +25,8 @@ type EVM struct {
 	rpc *ethclient.Client
 	ws  *ethclient.Client
 }
+
+var _ chain.Chain = (*EVM)(nil)
 
 func New(rpc *ethclient.Client, ws *ethclient.Client, contractAddr string, privateKey string) *EVM {
 	return &EVM{
@@ -45,7 +48,7 @@ func (a *EVM) init() error {
 }
 
 // Subscribe creates subscription for the contract and returns Subscription instance.
-func (a *EVM) Subscribe(ctx context.Context) (*Subscription, error) {
+func (a *EVM) Subscribe(ctx context.Context) (chain.Subscription, error) {
 	if err := a.init(); err != nil {
 		return nil, fmt.Errorf("init: %w", err)
 	}
@@ -64,7 +67,7 @@ func (a *EVM) Subscribe(ctx context.Context) (*Subscription, error) {
 	return s, nil
 }
 
-func (a *EVM) UnlockETH(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
+func (a *EVM) UnlockCoins(ctx context.Context, user string, amount *big.Int) (string, *big.Int, error) {
 	opts, err := a.createTransactor(ctx)
 	if err != nil {
 		return "", nil, err
@@ -77,6 +80,11 @@ func (a *EVM) UnlockETH(ctx context.Context, user string, amount *big.Int) (stri
 	}
 
 	return tx.Hash().Hex(), tx.Cost(), nil
+}
+
+func (a *EVM) MintToken(ctx context.Context, to string, coinId int, amount *big.Int) (string, *big.Int, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (a *EVM) createTransactor(ctx context.Context) (*bind.TransactOpts, error) {
