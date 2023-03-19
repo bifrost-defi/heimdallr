@@ -3,13 +3,13 @@ package tezos
 import (
 	"context"
 	"fmt"
-	"heimdallr/internal/chain"
 	"math/big"
 
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/signer"
 	"blockwatch.cc/tzgo/tezos"
+	"heimdallr/internal/chain"
 )
 
 type Tezos struct {

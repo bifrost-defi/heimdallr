@@ -1,8 +1,9 @@
 package tezos
 
 import (
-	"blockwatch.cc/tzgo/tezos"
 	"time"
+
+	"blockwatch.cc/tzgo/tezos"
 )
 
 type MichelsonEvent struct {

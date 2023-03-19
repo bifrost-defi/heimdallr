@@ -1,15 +1,15 @@
 package tezos
 
 import (
-	"blockwatch.cc/tzgo/contract"
-	"blockwatch.cc/tzgo/rpc"
 	"context"
 	"encoding/json"
 	"fmt"
-	"heimdallr/internal/chain"
 	"time"
 
+	"blockwatch.cc/tzgo/contract"
+	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/tezos"
+	"heimdallr/internal/chain"
 )
 
 type Subscription struct {

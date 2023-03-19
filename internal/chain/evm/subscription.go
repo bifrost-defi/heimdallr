@@ -2,6 +2,7 @@ package evm
 
 import (
 	"context"
+
 	"github.com/ethereum/go-ethereum/event"
 	"heimdallr/internal/chain"
 	"heimdallr/internal/chain/evm/wrapping-bridge"

@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"heimdallr/internal/chain/evm"
-	"heimdallr/internal/chain/tezos"
-	"heimdallr/internal/chain/ton"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,6 +18,9 @@ import (
 	"go.uber.org/zap"
 	"heimdallr/config"
 	"heimdallr/internal/bridge"
+	"heimdallr/internal/chain/evm"
+	"heimdallr/internal/chain/tezos"
+	"heimdallr/internal/chain/ton"
 	"heimdallr/internal/server"
 )
 

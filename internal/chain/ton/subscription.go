@@ -3,13 +3,13 @@ package ton
 import (
 	"context"
 	"fmt"
-	"heimdallr/internal/chain"
 	"math/big"
 	"time"
 
 	"github.com/xssnick/tonutils-go/address"
 	"github.com/xssnick/tonutils-go/tlb"
 	"github.com/xssnick/tonutils-go/ton"
+	"heimdallr/internal/chain"
 	"heimdallr/internal/utils"
 )
 

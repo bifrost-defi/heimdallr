@@ -3,6 +3,7 @@ package bridge
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/zap"
 	"heimdallr/internal/chain"
 	"heimdallr/internal/chain/evm"

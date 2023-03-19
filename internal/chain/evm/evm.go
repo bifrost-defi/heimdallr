@@ -4,14 +4,14 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"heimdallr/internal/chain"
-	"heimdallr/internal/chain/evm/wrapping-bridge"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"heimdallr/internal/chain"
+	"heimdallr/internal/chain/evm/wrapping-bridge"
 )
 
 type EVM struct {

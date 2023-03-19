@@ -3,7 +3,6 @@ package ton
 import (
 	"context"
 	"fmt"
-	"heimdallr/internal/chain"
 	"math/big"
 
 	"github.com/xssnick/tonutils-go/address"
@@ -11,6 +10,7 @@ import (
 	"github.com/xssnick/tonutils-go/ton"
 	"github.com/xssnick/tonutils-go/ton/wallet"
 	"github.com/xssnick/tonutils-go/tvm/cell"
+	"heimdallr/internal/chain"
 )
 
 type TON struct {
