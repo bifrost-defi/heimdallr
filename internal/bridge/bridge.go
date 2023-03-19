@@ -52,8 +52,16 @@ func (b *Bridge) Run(ctx context.Context) error {
 }
 
 func (b *Bridge) loop(ctx context.Context, ethSub chain.Subscription, tzsSub chain.Subscription, tonSub chain.Subscription) {
-	atomic := NewAtomic(
+	atomicWrap := NewAtomic(
 		WithChecker(b.checkOperation),
+		OnPerform(b.wrap),
+		OnRollback(b.unwrap),
+	)
+
+	atomicUnwrap := NewAtomic(
+		WithChecker(b.checkOperation),
+		OnPerform(b.wrap),
+		OnRollback(b.unwrap),
 	)
 
 	for {
@@ -64,33 +72,33 @@ func (b *Bridge) loop(ctx context.Context, ethSub chain.Subscription, tzsSub cha
 
 		// Handle events from chains and call another chain
 		case event := <-tonSub.OnCoinsLocked():
-			swap := atomic.NewOperation(
-				WithName("TODO"),
+			swap := atomicWrap.NewOperation(
+				WithName("TON coins locked"),
 			)
 			go swap.Run(ctx, event)
 		case event := <-tonSub.OnTokenBurned():
-			swap := atomic.NewOperation(
-				WithName("TODO"),
+			swap := atomicUnwrap.NewOperation(
+				WithName("TON jetton burned"),
 			)
 			go swap.Run(ctx, event)
 		case event := <-ethSub.OnCoinsLocked():
-			swap := atomic.NewOperation(
-				WithName("TODO"),
+			swap := atomicWrap.NewOperation(
+				WithName("ETH coins locked"),
 			)
 			go swap.Run(ctx, event)
 		case event := <-ethSub.OnTokenBurned():
-			swap := atomic.NewOperation(
-				WithName("TODO"),
+			swap := atomicUnwrap.NewOperation(
+				WithName("Ethereum token burned"),
 			)
 			go swap.Run(ctx, event)
 		case event := <-tzsSub.OnCoinsLocked():
-			swap := atomic.NewOperation(
-				WithName("TODO"),
+			swap := atomicWrap.NewOperation(
+				WithName("Tezos coins locked"),
 			)
 			go swap.Run(ctx, event)
 		case event := <-tzsSub.OnTokenBurned():
-			swap := atomic.NewOperation(
-				WithName("TODO"),
+			swap := atomicUnwrap.NewOperation(
+				WithName("Tezos token burned"),
 			)
 			go swap.Run(ctx, event)
 
@@ -103,6 +111,62 @@ func (b *Bridge) loop(ctx context.Context, ethSub chain.Subscription, tzsSub cha
 			b.logger.Errorf("ton subscribtion error: %s", err)
 		}
 	}
+}
+
+func (b *Bridge) wrap(ctx context.Context, event chain.Event) (success bool) {
+	chainID := ChainID(event.CoinID())
+	destChain, ok := b.chains[chainID]
+	if !ok {
+		b.logger.Errorf("unknown chain id: %d", chainID)
+
+		return false
+	}
+
+	hash, fee, err := destChain.MintToken(ctx, event.Destination(), event.CoinID(), event.Amount())
+	if err != nil {
+		b.logger.Errorf("mint token: %e", err)
+
+		return false
+	}
+
+	b.logger.With(
+		zap.String("user", event.User()),
+		zap.Int64("amount", event.Amount().Int64()),
+		zap.Int("chain_id", event.CoinID()),
+		zap.String("destination", event.Destination()),
+		zap.String("tx_hash", hash),
+		zap.Int64("fee", fee.Int64()),
+	).Info("token minted")
+
+	return true
+}
+
+func (b *Bridge) unwrap(ctx context.Context, event chain.Event) (success bool) {
+	chainID := ChainID(event.CoinID())
+	destChain, ok := b.chains[chainID]
+	if !ok {
+		b.logger.Errorf("unknown chain id: %d", chainID)
+
+		return false
+	}
+
+	hash, fee, err := destChain.UnlockCoins(ctx, event.Destination(), event.Amount())
+	if err != nil {
+		b.logger.Errorf("unlock coins: %e", err)
+
+		return false
+	}
+
+	b.logger.With(
+		zap.String("user", event.User()),
+		zap.Int64("amount", event.Amount().Int64()),
+		zap.Int("chain_id", event.CoinID()),
+		zap.String("destination", event.Destination()),
+		zap.String("tx_hash", hash),
+		zap.Int64("fee", fee.Int64()),
+	).Info("coins unlocked")
+
+	return true
 }
 
 func (b *Bridge) checkOperation(op Checker, event chain.Event) {
