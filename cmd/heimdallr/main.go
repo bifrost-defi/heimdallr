@@ -49,50 +49,23 @@ func main() {
 		sugar.Debug("shutdown")
 	}()
 
-	// Connect to Ethereum
-
-	ethRPCClient, err := ethclient.Dial(c.Ethereum.RPC)
+	eth, err := setupEthereum(ctx, c.Ethereum)
 	if err != nil {
-		err = fmt.Errorf("evm rpc dial: %w", err)
+		err = fmt.Errorf("setup ethereum: %w", err)
 		sugar.Fatal(err)
 	}
-	ethWSClient, err := ethclient.Dial(c.Ethereum.WS)
+
+	tzs, err := setupTezos(ctx, c.Tezos)
 	if err != nil {
-		err = fmt.Errorf("evm rpc dial: %w", err)
+		err = fmt.Errorf("setup tezos: %w", err)
 		sugar.Fatal(err)
 	}
-	eth := evm.New(ethRPCClient, ethWSClient, c.Ethereum.BridgeContract, c.Ethereum.PrivateKey)
 
-	// Connect to Tezos
-
-	tzsClient, err := rpc.NewClient(c.Tezos.URL, nil)
+	ton, err := setupTON(ctx, c.TON)
 	if err != nil {
-		err = fmt.Errorf("tezos dial: %w", err)
+		err = fmt.Errorf("setup ton: %w", err)
 		sugar.Fatal(err)
 	}
-	tzs := tezos.New(tzsClient, c.Tezos.PrivateKey)
-
-	if err := tzs.LoadContracts(
-		ctx,
-		c.Tezos.BridgeContract,
-	); err != nil {
-		err = fmt.Errorf("set tezos contract: %w", err)
-		sugar.Fatal(err)
-	}
-
-	// Connect to TON
-
-	pool := liteclient.NewConnectionPool()
-	err = pool.AddConnection(ctx, c.TON.URL, c.TON.ServerKey)
-	if err != nil {
-		err = fmt.Errorf("add ton connection: %w", err)
-		sugar.Fatal(err)
-	}
-	tonClient := tonUtils.NewAPIClient(pool)
-	seed := strings.Split(c.TON.WalletSeed, " ")
-	tonWallet, err := wallet.FromSeed(tonClient, seed, wallet.V3)
-
-	ton := ton.New(tonClient, tonWallet, c.TON.BridgeContract)
 
 	go runServer(ctx, sugar)
 
@@ -114,4 +87,52 @@ func runServer(ctx context.Context, logger *zap.SugaredLogger) {
 		err = fmt.Errorf("run server: %w", err)
 		logger.Fatal(err)
 	}
+}
+
+func setupEthereum(ctx context.Context, config config.Ethereum) (*evm.EVM, error) {
+	ethRPCClient, err := ethclient.DialContext(ctx, config.RPC)
+	if err != nil {
+		return nil, fmt.Errorf("evm rpc dial: %w", err)
+	}
+	ethWSClient, err := ethclient.DialContext(ctx, config.WS)
+	if err != nil {
+		return nil, fmt.Errorf("evm rpc dial: %w", err)
+	}
+	eth := evm.New(ethRPCClient, ethWSClient, config.BridgeContract, config.PrivateKey)
+
+	return eth, nil
+}
+
+func setupTezos(ctx context.Context, config config.Tezos) (*tezos.Tezos, error) {
+	tzsClient, err := rpc.NewClient(config.URL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("tezos dial: %w", err)
+	}
+	tzs := tezos.New(tzsClient, config.PrivateKey)
+
+	if err := tzs.LoadContracts(
+		ctx,
+		config.BridgeContract,
+	); err != nil {
+		return nil, fmt.Errorf("set tezos contract: %w", err)
+	}
+
+	return tzs, nil
+}
+
+func setupTON(ctx context.Context, config config.TON) (*ton.TON, error) {
+	pool := liteclient.NewConnectionPool()
+	err := pool.AddConnectionsFromConfigUrl(ctx, config.ConfigURL)
+	if err != nil {
+		return nil, fmt.Errorf("add ton connection: %w", err)
+	}
+	tonClient := tonUtils.NewAPIClient(pool)
+
+	seed := strings.Split(config.WalletSeed, " ")
+	tonWallet, err := wallet.FromSeed(tonClient, seed, wallet.V4R2)
+	if err != nil {
+		return nil, fmt.Errorf("wallet from seed: %w", err)
+	}
+
+	return ton.New(tonClient, tonWallet, config.BridgeContract), nil
 }

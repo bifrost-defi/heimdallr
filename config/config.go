@@ -7,25 +7,28 @@ import (
 )
 
 type Config struct {
-	Ethereum struct {
-		RPC            string `env:"ETHEREUM_RPC_URL"`
-		WS             string `env:"ETHEREUM_WS_URL"`
-		BridgeContract string `env:"ETHEREUM__BRIDGE_CONTRACT"`
-		PrivateKey     string `env:"ETHEREUM_PRIVATE_KEY"`
-	}
+	Ethereum Ethereum
+	Tezos    Tezos
+	TON      TON
+}
 
-	Tezos struct {
-		URL            string `env:"TEZOS_URL"`
-		BridgeContract string `env:"TEZOS_BRIDGE_CONTRACT"`
-		PrivateKey     string `env:"TEZOS_PRIVATE_KEY"`
-	}
+type Ethereum struct {
+	RPC            string `env:"ETHEREUM_RPC_URL"`
+	WS             string `env:"ETHEREUM_WS_URL"`
+	BridgeContract string `env:"ETHEREUM__BRIDGE_CONTRACT"`
+	PrivateKey     string `env:"ETHEREUM_PRIVATE_KEY"`
+}
 
-	TON struct {
-		URL            string `env:"TON_URL"`
-		BridgeContract string `env:"TON_BRIDGE_CONTRACT"`
-		ServerKey      string `env:"TON_SERVER_KEY"`
-		WalletSeed     string `env:"TON_WALLET_SEED"`
-	}
+type Tezos struct {
+	URL            string `env:"TEZOS_URL"`
+	BridgeContract string `env:"TEZOS_BRIDGE_CONTRACT"`
+	PrivateKey     string `env:"TEZOS_PRIVATE_KEY"`
+}
+
+type TON struct {
+	ConfigURL      string `env:"TON_CONFIG_URL"`
+	BridgeContract string `env:"TON_BRIDGE_CONTRACT"`
+	WalletSeed     string `env:"TON_WALLET_SEED"`
 }
 
 func LoadConfig() (*Config, error) {
